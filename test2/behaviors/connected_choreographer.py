@@ -1157,8 +1157,8 @@ class ConnectedChoreographer(DanceMode):
     def _convert_to_wav(self, input_path: str) -> Optional[str]:
         """Convert audio file to WAV using PyAV (decoding) and SoundFile (encoding).
 
-        This ensures we have a compatible file for playback (sf.read involved)
-        and analysis, without needing external ffmpeg binary.
+        Forces conversion to Mono 48kHz (standard for ReSpeaker) to ensure
+        compatibility and avoid channel mapping issues.
         """
         try:
             import soundfile as sf
@@ -1167,35 +1167,41 @@ class ConnectedChoreographer(DanceMode):
             container = av.open(input_path)
             stream = container.streams.audio[0]
             
-            # Keep original rate if possible, or default to 44100
-            # stream.rate might be None in some containers
-            rate = stream.rate if stream.rate else 44100
-            
+            # Force Mono 48kHz for reliability
             resampler = av.AudioResampler(
-                format="flt",
-                layout="stereo", # Convert to stereo for playback
-                rate=rate,
+                format="fltp", # Float planar (easiest to handle as numpy)
+                layout="mono", 
+                rate=48000,
             )
 
             all_samples = []
             for frame in container.decode(stream):
                 frame.pts = None
                 for resampled in resampler.resample(frame):
-                    # PyAV ndarray is (channels, samples)
-                    # SoundFile expects (samples, channels)
-                    all_samples.append(resampled.to_ndarray().T)
+                    # Validated: fltp + mono returns shape (1, samples)
+                    arr = resampled.to_ndarray()
+                    if arr.shape[0] > 0:
+                        all_samples.append(arr[0]) # Get the single channel data
                     
             if not all_samples:
+                logger.error(f"[{self.MODE_NAME}] No audio samples decoded")
                 return None
                 
-            y = np.concatenate(all_samples, axis=0)
+            y = np.concatenate(all_samples)
+            
+            # Check for silence (if mean amplitude is near zero)
+            if np.mean(np.abs(y)) < 0.001:
+                logger.warning(f"[{self.MODE_NAME}] Warning: Converted audio seems silent")
             
             # Output filename
             wav_path = str(Path(input_path).with_suffix(".wav"))
             
-            # Write WAV
-            sf.write(wav_path, y, rate)
-            logger.info(f"[{self.MODE_NAME}] Converted to WAV: {wav_path}")
+            # Write WAV (SoundFile handles 1D array as mono)
+            sf.write(wav_path, y, 48000)
+            
+            size_mb = os.path.getsize(wav_path) / (1024 * 1024)
+            logger.info(f"[{self.MODE_NAME}] Converted to WAV: {wav_path} ({size_mb:.2f} MB)")
+            self._log(f"Audio ready ({size_mb:.1f}MB)")
             
             # Delete original if different
             if wav_path != input_path:

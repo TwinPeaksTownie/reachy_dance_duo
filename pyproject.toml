@@ -52,4 +52,4 @@ include-package-data = true
 where = ["."]
 
 [tool.setuptools.package-data]
-test2 = ["**"]
+test2 = ["**/*"]

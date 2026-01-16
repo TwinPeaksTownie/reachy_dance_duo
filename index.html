@@ -1,0 +1,342 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width" />
+	<title>Reachy's Ultra Dance Mix 9000</title>
+	<meta name="description"
+		content="Transform your Reachy Mini into a dancing machine with three unique modes: live music detection, system audio reactivity, and choreographed YouTube performances." />
+	<link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+	<div class="hero">
+		<div class="hero-content">
+			<div class="app-icon">🪩</div>
+			<h1>Reachy's Ultra Dance Mix 9000</h1>
+			<p class="tagline">The ultimate dance app for Reachy Mini - Reachy dances to music in 3 unique ways. </p>
+		</div>
+	</div>
+
+	<div class="container">
+		<div class="main-card">
+			<div class="features-section">
+				<h2>🎵 Three Dance Modes</h2>
+
+				<div class="feature-grid">
+					<div class="feature-item">
+						<div class="feature-icon">🕺</div>
+						<h3>Live Groove</h3>
+						<p>Emergent chaos in all the right ways. An improvisational dancer
+							surfing the
+							unpredictable waves of live audio. Because of the unpredictability,
+							Reachy might occasionally miss a beat but comes with backup moves that make you think it was
+							always part of the plan. 60% of the time, it works every time.</p>
+					</div>
+
+					<div class="feature-item">
+						<div class="feature-icon">💃</div>
+						<h3>Synthwave Serenade</h3>
+						<p>Reachy sings along while keeping an eye on you. Reachy syncs to your audio with a few
+							seconds of
+							buffering to isolate syllables for perfect nods. Beats drive head rolls, drums trigger
+							rhythmic nods, and vocals flare the antennas in perfect lockstep. Now you're singing
+							together.</p>
+					</div>
+
+					<div class="feature-item">
+						<div class="feature-icon">🎬</div>
+						<h3>Beat Bandit</h3>
+						<p>Reachy plans a routine for an entire song. Reachy scouts the seas of YouTube for your audio,
+							then
+							pre-analyzes the entire track to plan custom choreography. You control the intensity and
+							antenna expressiveness in real-time
+							while Reachy executes perfectly synchronized moves.</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="features-section">
+				<h2>✨ Advanced Features</h2>
+
+				<div class="feature-grid">
+					<div class="feature-item">
+						<div class="feature-icon">🎛️</div>
+						<h3>Live Tuning</h3>
+						<p>Adjust intensity, amplitude, smoothing, and per-move dampening in real-time through the web
+							interface. Fine-tune Reachy's performance on the fly.</p>
+					</div>
+
+					<div class="feature-item">
+						<div class="feature-icon">🎯</div>
+						<h3>Smart Calibration</h3>
+						<p>3-phase noise calibration automatically filters out motor noise and environmental sounds,
+							ensuring Reachy only dances to the music.</p>
+					</div>
+
+					<div class="feature-item">
+						<div class="feature-icon">🎛️</div>
+						<h3>Vocal Response (Experimental)</h3>
+						<p>Synthwave Serenade mode includes an experimental "Speech Tapper" that isolates vocals and
+							triggers
+							head nods, making Reachy seem to respond to singing.</p>
+					</div>
+
+					<div class="feature-item">
+						<div class="feature-icon">🛡️</div>
+						<h3>Built-in Safety</h3>
+						<p>Collision prevention, adaptive pitch limiting, and smooth motion interpolation ensure safe
+							operation during even the wildest dance sessions.</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="info-card">
+			<h2>🎯 How It Works</h2>
+			<p>
+				Ultra Dance Mix 9000 combines real-time audio analysis, beat detection, and intelligent choreography
+				to create natural, engaging dance performances. Each mode processes audio differently:
+			</p>
+			<ul>
+				<li><strong>Live Groove</strong> uses spectral flux analysis and onset detection to find beats in live
+					microphone audio</li>
+				<li><strong>Synthwave Serenade</strong> performs frequency band separation to map drums to nodding and
+					bass to
+					(the
+					operator's favorite) excessive head roll, while LSTM isolation handles syllabic agreement</li>
+				<li><strong>Beat Bandit</strong> studies the entire track, then owns every beat with
+					custom choreography and real-time intensity control</li>
+			</ul>
+			<p>
+				The web interface at <code>http://localhost:9000</code> gives you complete control over all three
+				modes, with real-time parameter adjustment and visual feedback.
+			</p>
+		</div>
+
+		<div class="download-section">
+			<div class="download-card">
+				<h2>🚀 Install to Your Reachy</h2>
+				<p>One-click installation directly to your Reachy Mini dashboard</p>
+
+				<div class="dashboard-config">
+					<label for="dashboardUrl">Your Reachy Dashboard URL:</label>
+					<input type="url" id="dashboardUrl" value="http://localhost:8000"
+						placeholder="http://your-reachy-ip:8000" />
+				</div>
+
+				<button id="installBtn" class="install-btn">
+					<span class="btn-icon">📥</span>
+					Install Ultra Dance Mix 9000
+				</button>
+
+				<div id="installStatus" class="install-status"></div>
+			</div>
+		</div>
+
+		<div class="info-card">
+			<h2>🚀 Getting Started</h2>
+			<ol class="steps-list">
+				<li>Click the "Install" button above to install directly to your Reachy dashboard</li>
+				<li>Or manually install: Go to <code>http://localhost:8000</code> and find the app in the Applications
+					section</li>
+				<li>Toggle the app on and click the ⚙️ icon</li>
+				<li>The web interface will open at <code>http://localhost:9000</code></li>
+				<li>Select a dance mode and press Dance!</li>
+			</ol>
+		</div>
+
+		<div class="info-card">
+			<h2>📋 Requirements</h2>
+			<p><strong>Works out of the box:</strong></p>
+			<ul>
+				<li><strong>Live Groove:</strong> Just needs Reachy's built-in microphone</li>
+				<li><strong>Synthwave Serenade:</strong> Requires system audio loopback
+					<ul>
+						<li>Mac: Install <a href="https://existential.audio/blackhole/" target="_blank">BlackHole</a>
+						</li>
+						<li>Linux: Configure PulseAudio loopback</li>
+					</ul>
+				</li>
+				<li><strong>Beat Bandit:</strong> Works with any YouTube URL or YouTube Music search (no
+					account needed)</li>
+				<li><strong>Vocal Response:</strong> Automatically downloads pretrained models on first use (~50MB)</li>
+			</ul>
+		</div>
+
+		<div class="info-card">
+			<h2>🎨 Built With</h2>
+			<p>
+				Ultra Dance Mix 9000 leverages cutting-edge audio processing and machine learning:
+			</p>
+			<ul>
+				<li><strong>Librosa</strong> for audio analysis and beat tracking</li>
+				<li><strong>YT-DLP & YouTube Music API</strong> for music discovery and download</li>
+				<li><strong>Demucs/MDX-Net</strong> for vocal isolation (experimental Speech Tapper)</li>
+				<li><strong>Reachy Mini Dances Library</strong> for the core movement repertoire</li>
+			</ul>
+		</div>
+	</div>
+
+	<div class="footer">
+		<p>
+			🕺 Reachy's Ultra Dance Mix 9000 •
+			Created by <a href="https://github.com/TwinPeaksTownie" target="_blank">Carson</a> with
+			<a href="https://github.com/pollen-robotics" target="_blank">Pollen Robotics</a> •
+			<a href="https://huggingface.co/spaces/pollen-robotics/Reachy_Mini_Apps" target="_blank">Browse More
+				Apps</a>
+		</p>
+	</div>
+
+	<script>
+		// Get the current Hugging Face Space URL as the repository URL
+		function getCurrentSpaceUrl() {
+			const currentUrl = window.location.href;
+			const cleanUrl = currentUrl.split('?')[0].replace(/\/$/, '');
+			return cleanUrl;
+		}
+
+		// Parse TOML content to extract project name
+		function parseTomlProjectName(tomlContent) {
+			try {
+				const lines = tomlContent.split('\n');
+				let inProjectSection = false;
+
+				for (const line of lines) {
+					const trimmedLine = line.trim();
+
+					if (trimmedLine === '[project]') {
+						inProjectSection = true;
+						continue;
+					}
+
+					if (trimmedLine.startsWith('[') && trimmedLine !== '[project]') {
+						inProjectSection = false;
+						continue;
+					}
+
+					if (inProjectSection && trimmedLine.startsWith('name')) {
+						const match = trimmedLine.match(/name\s*=\s*["']([^"']+)["']/);
+						if (match) {
+							return match[1].toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+						}
+					}
+				}
+
+				throw new Error('Project name not found in pyproject.toml');
+			} catch (error) {
+				console.error('Error parsing pyproject.toml:', error);
+				return 'reachy-ultradancemix-9000';
+			}
+		}
+
+		// Fetch and parse pyproject.toml from the current space
+		async function getAppNameFromCurrentSpace() {
+			try {
+				const response = await fetch('./pyproject.toml');
+				if (!response.ok) {
+					throw new Error(`Failed to fetch pyproject.toml: ${response.status}`);
+				}
+				const tomlContent = await response.text();
+				return parseTomlProjectName(tomlContent);
+			} catch (error) {
+				console.error('Error fetching app name from current space:', error);
+				const url = getCurrentSpaceUrl();
+				const parts = url.split('/');
+				const spaceName = parts[parts.length - 1];
+				return spaceName.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+			}
+		}
+
+		// Install to Reachy
+		async function installToReachy() {
+			const dashboardUrl = document.getElementById('dashboardUrl').value.trim();
+			const statusDiv = document.getElementById('installStatus');
+			const installBtn = document.getElementById('installBtn');
+
+			if (!dashboardUrl) {
+				showStatus('error', 'Please enter your Reachy dashboard URL');
+				return;
+			}
+
+			try {
+				installBtn.disabled = true;
+				installBtn.innerHTML = '<span class="btn-icon">⏳</span>Installing...';
+
+				showStatus('loading', 'Connecting to your Reachy dashboard...');
+
+				// Test connection
+				const testResponse = await fetch(`${dashboardUrl}/api/status`, {
+					method: 'GET',
+					mode: 'cors',
+				});
+
+				if (!testResponse.ok) {
+					throw new Error('Cannot connect to dashboard. Make sure the URL is correct and the dashboard is running.');
+				}
+
+				showStatus('loading', 'Reading app configuration...');
+
+				// Get app name from pyproject.toml
+				const appName = await getAppNameFromCurrentSpace();
+
+				// Get current space URL as repository URL
+				const repoUrl = getCurrentSpaceUrl();
+
+				showStatus('loading', `Starting installation of "${appName}"...`);
+
+				// Start installation
+				const installResponse = await fetch(`${dashboardUrl}/api/install`, {
+					method: 'POST',
+					mode: 'cors',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						url: repoUrl,
+						name: appName
+					})
+				});
+
+				const result = await installResponse.json();
+
+				if (installResponse.ok) {
+					showStatus('success', `✅ Installation started for "${appName}"! Check your dashboard for progress.`);
+					setTimeout(() => {
+						showStatus('info', `Open your dashboard at ${dashboardUrl} to see the installed app.`);
+					}, 3000);
+				} else {
+					throw new Error(result.detail || 'Installation failed');
+				}
+			} catch (error) {
+				console.error('Installation error:', error);
+				showStatus('error', `❌ ${error.message}`);
+			} finally {
+				installBtn.disabled = false;
+				installBtn.innerHTML = '<span class="btn-icon">📥</span>Install Ultra Dance Mix 9000';
+			}
+		}
+
+		// Show status message
+		function showStatus(type, message) {
+			const statusDiv = document.getElementById('installStatus');
+			statusDiv.className = `install-status ${type}`;
+			statusDiv.textContent = message;
+			statusDiv.style.display = 'block';
+		}
+
+		// Initialize on page load
+		document.addEventListener('DOMContentLoaded', () => {
+			const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+			if (isLocalhost) {
+				document.getElementById('dashboardUrl').value = 'http://localhost:8000';
+			}
+		});
+
+		// Event listener
+		document.getElementById('installBtn').addEventListener('click', installToReachy);
+	</script>
+</body>
+
+</html>

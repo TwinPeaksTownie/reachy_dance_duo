@@ -1,0 +1,15 @@
+{
+  "dizzy_spin": false,
+  "grid_snap": true,
+  "head_tilt_roll": false,
+  "interwoven_spirals": true,
+  "jackson_square": true,
+  "pendulum_swing": true,
+  "polyrhythm_combo": false,
+  "sharp_side_tilt": false,
+  "side_glance_flick": true,
+  "side_peekaboo": false,
+  "side_to_side_sway": false,
+  "stumble_and_recover": true,
+  "uh_huh_tilt": true
+}

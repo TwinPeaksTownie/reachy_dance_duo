@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/static/favicon/favicon.ico" />
+    <title>Reachy's Ultra Dance Mix 9000</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Reachy's Ultra Dance Mix 9000</h1>
+
+        <div id="message" class="message"></div>
+
+        <!-- Mode Selection -->
+        <div class="card card-glow">
+            <h2>Pick Your Dance Mode</h2>
+            <div class="mode-buttons">
+                <button class="mode-btn selected" data-mode="live_groove" onclick="selectMode('live_groove')">
+                    Live Groove
+                </button>
+                <!-- Synthwave Serenade removed -->
+                <button class="mode-btn" data-mode="beat_bandit" onclick="selectMode('beat_bandit')">
+                    Beat Bandit
+                </button>
+            </div>
+
+            <!-- Live Groove Settings -->
+            <div id="settings-live_groove" class="mode-settings-panel active">
+                <h3 class="mode-title">Reachy listens and dances along</h3>
+                <h3 class="mode-subtitle">(uses microphone - do not play audio)</h3>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Intensity</span>
+                        <span id="mode-live_groove-intensity-value" class="slider-value">1.00</span>
+                    </div>
+                    <input type="range" id="mode-live_groove-intensity-slider" min="0.5" max="5.0" step="0.1"
+                        value="1.0" oninput="updateModeSlider('live_groove', 'intensity', this.value)">
+                    <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">
+                        Higher = bigger movements
+                    </div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Volume Threshold</span>
+                        <span id="mode-live_groove-volume_gate_threshold-value" class="slider-value">0.005</span>
+                    </div>
+                    <input type="range" id="mode-live_groove-volume_gate_threshold-slider" min="0.001" max="0.020"
+                        step="0.001" value="0.005"
+                        oninput="updateModeSlider('live_groove', 'volume_gate_threshold', this.value)">
+                    <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">
+                        Raise if dancing without music. Lower if not responding to music.
+                    </div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>BPM Stability Threshold (Loose)</span>
+                        <span id="mode-live_groove-bpm_stability_threshold-value" class="slider-value">8.00</span>
+                    </div>
+                    <input type="range" id="mode-live_groove-bpm_stability_threshold-slider" min="1.0" max="20.0"
+                        step="0.5" value="8.0"
+                        oninput="updateModeSlider('live_groove', 'bpm_stability_threshold', this.value)">
+                    <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">
+                        Higher = Looser lock (easier to dance, may accept bad beats). Lower = Stricter.
+                    </div>
+                </div>
+
+                <!-- Collapsible Move Dampening -->
+                <div class="collapsible" id="move-dampening-collapsible">
+                    <div class="collapsible-header" onclick="toggleCollapsible('move-dampening-collapsible')">
+                        <span>Move Dampening</span>
+                        <span class="arrow">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <p style="color: #888; margin-bottom: 15px; font-size: 0.85rem;">
+                            Adjust the intensity of individual dance moves. Adjust amplitude for each dance move. Check
+                            "+ Mirrored" to add a Y-flipped version.
+                        </p>
+                        <div id="moves-grid" class="moves-grid">
+                            <p style="color: #666;">Loading moves...</p>
+                        </div>
+                        <div class="button-row" style="margin-top: 8px;">
+                            <button class="control-btn secondary-btn" onclick="resetMoves()">Reset to Defaults</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connected Choreographer Settings -->
+            <div id="settings-beat_bandit" class="mode-settings-panel">
+                <h3 class="mode-title">Reachy plans a routine for an entire song</h3>
+                <h3 class="mode-subtitle">(uses YouTube - plays audio through Reachy's speakers)</h3>
+
+                <!-- Tabs -->
+                <div class="tab-container">
+                    <button class="tab-btn active ytmusic" onclick="openTab('ytmusic')">Scout the Seas</button>
+                    <button class="tab-btn youtube" onclick="openTab('youtube')">X Marks the Spot</button>
+                </div>
+
+                <!-- YouTube Music Search Tab (no auth required!) -->
+                <div id="tab-ytmusic" class="tab-content active">
+                    <p style="text-align: center; color: #888; margin-bottom: 15px; font-size: 0.9rem;">
+                        Reachy scouts the seas of YouTube for you.
+                    </p>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="ytmusic-search-input" class="url-input" style="margin-bottom: 0;"
+                            placeholder="Search YouTube..." onkeypress="if(event.key === 'Enter') searchYtmusic()">
+                        <button class="ytmusic-btn" style="flex: 0 0 80px;" onclick="searchYtmusic()">Go</button>
+                    </div>
+
+                    <div id="ytmusic-results" class="results-container">
+                        <p style="color: #666; text-align: center; margin-top: 8px;">Results will appear here...</p>
+                    </div>
+
+                    <div style="margin-top: 10px; margin-bottom: 15px; text-align: center;">
+                        <button id="ytmusic-dance-btn" class="global-dance-btn ytmusic"
+                            style="width: 50%; margin: 0 auto; display: block;" onclick="handleGlobalDance()">
+                            DANCE!
+                        </button>
+                    </div>
+                </div>
+
+                <!-- YouTube URL Tab -->
+                <div id="tab-youtube" class="tab-content">
+                    <p style="text-align: center; color: #888; margin-bottom: 15px; font-size: 0.9rem;">
+                        X marks the spot - paste your YouTube link.
+                    </p>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="youtube-url" class="url-input" style="margin-bottom: 0;"
+                            placeholder="Paste YouTube link...">
+                        <button class="youtube-btn" style="flex: 0 0 80px;" onclick="submitYoutubeUrl()">Go</button>
+                    </div>
+
+                    <div id="youtube-results" class="results-container">
+                        <p style="color: #666; text-align: center; margin-top: 8px;">Video preview will appear here...
+                        </p>
+                    </div>
+
+                    <div style="margin-top: 10px; margin-bottom: 15px; text-align: center;">
+                        <button id="youtube-dance-btn" class="global-dance-btn youtube"
+                            style="width: 50%; margin: 0 auto; display: block;" onclick="handleGlobalDance()">
+                            DANCE!
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status Terminal -->
+                <div id="status-terminal" class="status-terminal">
+                    <!-- Logs will appear here -->
+                </div>
+
+                <!-- Shared Sliders -->
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Amplitude Scale</span>
+                            <span id="mode-beat_bandit-amplitude_scale-value" class="slider-value">0.50</span>
+                        </div>
+                        <input type="range" id="mode-beat_bandit-amplitude_scale-slider" min="0.1" max="1.5" step="0.05"
+                            value="0.5" oninput="updateModeSlider('beat_bandit', 'amplitude_scale', this.value)">
+                        <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">How big the dance moves are</div>
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Interpolation (LERP)</span>
+                            <span id="mode-beat_bandit-interpolation_alpha-value" class="slider-value">0.30</span>
+                        </div>
+                        <input type="range" id="mode-beat_bandit-interpolation_alpha-slider" min="0.05" max="1.0"
+                            step="0.05" value="0.3"
+                            oninput="updateModeSlider('beat_bandit', 'interpolation_alpha', this.value)">
+                        <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Lower = smoother, higher =
+                            snappier</div>
+                    </div>
+
+                    <!-- Collapsible Advanced Antenna Settings -->
+                    <div class="collapsible" id="antenna-settings-collapsible">
+                        <div class="collapsible-header" onclick="toggleCollapsible('antenna-settings-collapsible')">
+                            <span>Advanced Antenna Settings</span>
+                            <span class="arrow">&#9660;</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="slider-group">
+                                <div class="slider-label">
+                                    <span>Antenna Beat Threshold</span>
+                                    <span id="mode-beat_bandit-antenna_energy_threshold-value"
+                                        class="slider-value">0.25</span>
+                                </div>
+                                <input type="range" id="mode-beat_bandit-antenna_energy_threshold-slider" min="0.0"
+                                    max="0.5" step="0.01" value="0.25"
+                                    oninput="updateModeSlider('beat_bandit', 'antenna_energy_threshold', this.value)">
+                                <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Higher = antenna only
+                                    reacts to strong beats</div>
+                            </div>
+
+                            <div class="slider-group">
+                                <div class="slider-label">
+                                    <span>Antenna Gain</span>
+                                    <span id="mode-beat_bandit-antenna_gain-value" class="slider-value">8</span>
+                                </div>
+                                <input type="range" id="mode-beat_bandit-antenna_gain-slider" min="1" max="50" step="1"
+                                    value="8" oninput="updateModeSlider('beat_bandit', 'antenna_gain', this.value)">
+                                <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">How far antenna moves
+                                    when triggered</div>
+                            </div>
+
+                            <div class="slider-group">
+                                <div class="slider-label">
+                                    <span>Antenna Sensitivity</span>
+                                    <span id="mode-beat_bandit-antenna_sensitivity-value"
+                                        class="slider-value">0.60</span>
+                                </div>
+                                <input type="range" id="mode-beat_bandit-antenna_sensitivity-slider" min="0.1" max="1.0"
+                                    step="0.05" value="0.6"
+                                    oninput="updateModeSlider('beat_bandit', 'antenna_sensitivity', this.value)">
+                                <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">How quickly antenna
+                                    responds</div>
+                            </div>
+
+                            <div class="slider-group">
+                                <div class="slider-label">
+                                    <span>Antenna Max Span</span>
+                                    <span id="mode-beat_bandit-antenna_amplitude-value" class="slider-value">1.75</span>
+                                </div>
+                                <input type="range" id="mode-beat_bandit-antenna_amplitude-slider" min="0.5" max="3.15"
+                                    step="0.05" value="1.75"
+                                    oninput="updateModeSlider('beat_bandit', 'antenna_amplitude', this.value)">
+                                <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Maximum antenna travel
+                                    range</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Synthwave Serenade Settings -->
+            <!-- Synthwave Serenade Panel Removed -->
+            <div id="settings-synthwave_serenade" class="mode-settings-panel" style="display:none!important">
+                <h3 class="mode-title">Mode Disabled</h3>
+                </h3>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Movement Intensity</span>
+                        <span id="mode-synthwave_serenade-intensity-value" class="slider-value">1.00</span>
+                    </div>
+                    <input type="range" id="mode-synthwave_serenade-intensity-slider" min="0.2" max="2.0" step="0.1"
+                        value="1.0" oninput="updateModeSlider('synthwave_serenade', 'intensity', this.value)">
+                    <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Overall dance movement size</div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Sway</span>
+                        <span id="mode-synthwave_serenade-liveliness-value" class="slider-value">1.00</span>
+                    </div>
+                    <input type="range" id="mode-synthwave_serenade-liveliness-slider" min="0.0" max="5.0" step="0.1"
+                        value="1.0" oninput="updateModeSlider('synthwave_serenade', 'liveliness', this.value)">
+                    <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Side-to-side breathing and antenna
+                        motion</div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Body Independence</span>
+                        <span id="mode-synthwave_serenade-strain_threshold-value" class="slider-value">15</span>
+                    </div>
+                    <input type="range" id="mode-synthwave_serenade-strain_threshold-slider" min="5" max="45" step="5"
+                        value="15" oninput="updateModeSlider('synthwave_serenade', 'strain_threshold', this.value)">
+                    <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Higher = head moves more
+                        independently from body</div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Vocal Response</span>
+                        <span id="mode-synthwave_serenade-vocal_response-value" class="slider-value">0.00</span>
+                    </div>
+                    <input type="range" id="mode-synthwave_serenade-vocal_response-slider" min="-2.0" max="2.0"
+                        step="0.1" value="0.0"
+                        oninput="updateModeSlider('synthwave_serenade', 'vocal_response', this.value)">
+                    <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Vocal isolation motion (Speech
+                        Tapper). Negative values = Nod UP.</div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Playback Volume</span>
+                        <span id="mode-synthwave_serenade-playback_volume-value" class="slider-value">1.50</span>
+                    </div>
+                    <input type="range" id="mode-synthwave_serenade-playback_volume-slider" min="0.5" max="2.0"
+                        step="0.1" value="1.5"
+                        oninput="updateModeSlider('synthwave_serenade', 'playback_volume', this.value)">
+                    <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Audio playback volume (1.0 = normal,
+                        2.0 = 2x louder)</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="start-btn" class="control-btn start-btn" onclick="startMode()">Dance!</button>
+                <button id="stop-btn" class="control-btn stop-btn" onclick="stopMode()">Stop</button>
+            </div>
+        </div>
+
+        <!-- Safety Tuning (Collapsible) -->
+        <div class="card">
+            <div class="collapsible" id="safety-collapsible">
+                <div class="collapsible-header" onclick="toggleCollapsible('safety-collapsible')">
+                    <span>Safety Tuning</span>
+                    <span class="arrow">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Smoothing</span>
+                            <span id="smoothing-value" class="slider-value">1.000</span>
+                        </div>
+                        <input type="range" id="smoothing-slider" min="0.01" max="1.0" step="0.01" value="1.0"
+                            oninput="updateSlider('smoothing', this.value)">
+                        <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Higher = gentler transitions
+                        </div>
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Z Threshold (collision)</span>
+                            <span id="z-threshold-value" class="slider-value">0.005</span>
+                        </div>
+                        <input type="range" id="z-threshold-slider" min="0.001" max="0.02" step="0.001" value="0.005"
+                            oninput="updateSlider('z_threshold', this.value)">
+                        <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Collision prevention sensitivity
+                        </div>
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Max Pitch at Low Z</span>
+                            <span id="max-pitch-value" class="slider-value">0.150</span>
+                        </div>
+                        <input type="range" id="max-pitch-slider" min="0.05" max="0.3" step="0.01" value="0.15"
+                            oninput="updateSlider('max_pitch_at_low_z', this.value)">
+                        <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Limits forward lean when low
+                        </div>
+                    </div>
+
+                    <button class="control-btn start-btn" style="margin-top: 10px" onclick="applySafetyConfig()">
+                        Apply Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="calibration-box">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: baseline; gap: 10px;">
+                    <span class="box-label" style="margin-bottom: 0;">Calibration</span>
+                    <span style="font-size: 0.8rem; color: #888;">Reachy does a short environment calibration to filter
+                        noise. KEEP QUIET DURING CALIBRATION.</span>
+                </div>
+                <button
+                    style="background: var(--light-blue); color: var(--dark-bg); border: none; border-radius: 20px; padding: 6px 14px; font-size: 0.75rem; font-weight: 600; cursor: pointer;"
+                    onclick="calibrateEnvironment()">
+                    Calibrate
+                </button>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-label">Connection</div>
+                <div id="connection-status" class="status-value disconnected">---</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Mode</div>
+                <div id="current-mode" class="status-value">-</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">State</div>
+                <div id="current-state" class="status-value">Idle</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">BPM / Beat</div>
+                <div id="bpm-display" class="status-value">-</div>
+            </div>
+        </div>
+        <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- Synthwave Serenade Requirements Overlay -->
+    <div id="synthwave-serenade-overlay" class="requirements-overlay" style="display: none;">
+        <div class="requirements-modal">
+            <h2>Synthwave Serenade Setup Required</h2>
+            <p>Synthwave Serenade requires PyAudio and BlackHole to work. BlackHole creates a virtual audio device that
+                captures
+                your computer's audio output.</p>
+
+            <div class="requirements-status" id="requirements-status">
+                <div class="status-item">
+                    <span>Homebrew:</span>
+                    <span id="brew-status">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span>PyAudio:</span>
+                    <span id="pyaudio-status">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span>BlackHole:</span>
+                    <span id="blackhole-status">Checking...</span>
+                </div>
+            </div>
+
+            <div class="requirements-note">
+                <span class="note-header">Manual Setup Required</span>
+                <span class="note-content">
+                    1. Click <strong>Copy Install Command</strong> and run it in your terminal (password required).<br>
+                    2. Click <strong>Finalize Install</strong> below.<br>
+                    3. <strong>Reboot</strong> your computer manually.
+                </span>
+            </div>
+
+            <div class="requirements-actions">
+                <button class="control-btn secondary-btn" onclick="closeDiscoOverlay()">Cancel</button>
+                <button class="control-btn reboot-btn" onclick="copyInstallCommand()" id="copy-btn">Copy Install
+                    Command</button>
+                <button class="control-btn install-btn" onclick="installSynthwaveRequirements()"
+                    id="install-btn-reqs">Finalize
+                    Install</button>
+            </div>
+
+            <div id="install-progress" style="display: none; margin-top: 15px; text-align: center;">
+                <p>Installing... This may take a few minutes.</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 100%; animation: pulse 1.5s ease-in-out infinite;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '';  // Same origin
+        let selectedMode = 'live_groove';
+        let statusInterval = null;
+        let ws = null;
+
+        // State for Connected Choreographer
+        let currentTab = 'ytmusic';
+        let selectedItem = null; // { type: 'ytmusic'|'youtube', data: ... }
+
+        // Toggle collapsible sections
+        function toggleCollapsible(id) {
+            const el = document.getElementById(id);
+            el.classList.toggle('open');
+        }
+
+        // Synthwave Serenade Requirements Check
+        async function checkSynthwaveRequirements() {
+            try {
+                const res = await fetch(`${API_BASE}/api/synthwave-serenade/requirements`);
+                const data = await res.json();
+
+                document.getElementById('brew-status').textContent = data.brew_installed ? '✓ Installed' : '✗ Not installed';
+                document.getElementById('brew-status').style.color = data.brew_installed ? '#4ade80' : '#f87171';
+
+                document.getElementById('pyaudio-status').textContent = data.pyaudio_installed ? '✓ Installed' : '✗ Not installed';
+                document.getElementById('pyaudio-status').style.color = data.pyaudio_installed ? '#4ade80' : '#f87171';
+
+                document.getElementById('blackhole-status').textContent = data.blackhole_installed ? '✓ Installed' : '✗ Not installed';
+                document.getElementById('blackhole-status').style.color = data.blackhole_installed ? '#4ade80' : '#f87171';
+
+                return data.ready;
+            } catch (error) {
+                console.error('Failed to check requirements:', error);
+                return false;
+            }
+        }
+
+        function copyInstallCommand() {
+            const command = "brew install portaudio && brew install --cask blackhole-2ch";
+            navigator.clipboard.writeText(command).then(() => {
+                showMessage('Command copied to clipboard! Paste it in your terminal.', 'success');
+            }, (err) => {
+                console.error('Could not copy text: ', err);
+                showMessage('Failed to copy command.', 'error');
+            });
+        }
+
+        async function installSynthwaveRequirements() {
+            const installBtn = document.getElementById('install-btn-reqs');
+            const progress = document.getElementById('install-progress');
+
+            installBtn.disabled = true;
+            progress.style.display = 'block';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/synthwave-serenade/install`, {
+                    method: 'POST'
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Installation failed');
+                }
+
+                const data = await res.json();
+                showMessage(data.message, 'success');
+
+                // Refresh requirements check
+                checkSynthwaveRequirements();
+
+            } catch (error) {
+                showMessage('Installation failed: ' + error.message, 'error');
+            } finally {
+                installBtn.disabled = false;
+                progress.style.display = 'none';
+            }
+        }
+
+        function closeDiscoOverlay() {
+            document.getElementById('synthwave-serenade-overlay').style.display = 'none';
+            // Switch back to Live Groove
+            selectMode('live_groove');
+        }
+
+        // Mode selection
+        async function selectMode(mode) {
+            selectedMode = mode;
+
+            // Check Synthwave Serenade requirements before switching
+            if (mode === 'synthwave_serenade') {
+                const ready = await checkSynthwaveRequirements();
+                if (!ready) {
+                    document.getElementById('synthwave-serenade-overlay').style.display = 'flex';
+                    return; // Don't switch mode yet
+                }
+            }
+
+            // Update button states
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.mode === mode);
+            });
+
+            // Show/hide mode settings panels
+            document.querySelectorAll('.mode-settings-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.getElementById(`settings-${mode}`).classList.add('active');
+
+            // Toggle Start Button visibility
+            const startBtn = document.getElementById('start-btn');
+            if (mode === 'beat_bandit') {
+                startBtn.style.display = 'none';
+            } else {
+                startBtn.style.display = 'block';
+            }
+
+            // Check YouTube Music status when Connected Choreographer is selected
+            if (mode === 'beat_bandit') {
+                checkYtmusicStatus();
+                openTab(currentTab);
+                document.getElementById('status-terminal').classList.add('active');
+            } else {
+                document.getElementById('status-terminal').classList.remove('active');
+            }
+        }
+
+        // Tab Handling
+        function openTab(tab) {
+            currentTab = tab;
+
+            // Update Tab Buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.classList.contains(tab)) btn.classList.add('active');
+            });
+
+            // Update Tab Content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            updateGlobalButton();
+        }
+
+        function updateGlobalButton() {
+            const ytmusicBtn = document.getElementById('ytmusic-dance-btn');
+            const youtubeBtn = document.getElementById('youtube-dance-btn');
+
+            // Default disabled
+            if (ytmusicBtn) ytmusicBtn.disabled = true;
+            if (youtubeBtn) youtubeBtn.disabled = true;
+            if (ytmusicBtn) ytmusicBtn.classList.remove('ready');
+            if (youtubeBtn) youtubeBtn.classList.remove('ready');
+
+            if (selectedItem && selectedItem.type === 'ytmusic' && ytmusicBtn) {
+                ytmusicBtn.classList.add('ready');
+                ytmusicBtn.disabled = false;
+            }
+            if (selectedItem && selectedItem.type === 'youtube' && youtubeBtn) {
+                youtubeBtn.classList.add('ready');
+                youtubeBtn.disabled = false;
+            }
+        }
+
+        function selectItem(type, data, elementId) {
+            selectedItem = { type, data };
+
+            // Visual Selection
+            document.querySelectorAll('.result-item').forEach(el => el.classList.remove('selected'));
+            if (elementId) {
+                const el = document.getElementById(elementId);
+                if (el) el.classList.add('selected');
+            }
+
+            updateGlobalButton();
+        }
+
+        // Calibrate environment
+        let pendingCalibrationSave = false;
+
+        async function calibrateEnvironment() {
+            try {
+                const res = await fetch(`${API_BASE}/api/mode/live_groove/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ force_calibration: true, skip_calibration: false })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Failed to calibrate');
+                }
+
+                pendingCalibrationSave = true;
+                showMessage('Calibrating environment...', 'success');
+            } catch (e) {
+                showMessage(e.message, 'error');
+            }
+        }
+
+        // Start mode
+        async function startMode() {
+            const startBtn = document.getElementById('start-btn');
+            if (startBtn) startBtn.disabled = true;
+
+            let body = {};
+
+            if (selectedMode === 'live_groove') {
+                body.skip_calibration = true;
+                if (profileExists) {
+                    body.profile_path = 'default';
+                }
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/mode/${selectedMode}/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Failed to start');
+                }
+
+                const modeNames = {
+                    'live_groove': 'Live Groove',
+                    'synthwave_serenade': 'Synthwave Serenade',
+                    'beat_bandit': 'Beat Bandit',
+                };
+                const modeName = modeNames[selectedMode] || selectedMode;
+                const modeMsg = selectedMode === 'live_groove' && profileExists ?
+                    `Started ${modeName} (loading profile)` :
+                    `Started ${modeName}`;
+                showMessage(modeMsg, 'success');
+            } catch (e) {
+                showMessage(e.message, 'error');
+            } finally {
+                if (startBtn) startBtn.disabled = false;
+            }
+        }
+
+        // YouTube Music Search (no auth required!)
+        async function checkYtmusicStatus() {
+            try {
+                const res = await fetch(`${API_BASE}/api/ytmusic/status`);
+                const data = await res.json();
+
+                if (!data.available) {
+                    console.warn('YouTube Music not available:', data.message);
+                }
+            } catch (e) {
+                console.error('YouTube Music status check failed', e);
+            }
+        }
+
+        async function searchYtmusic() {
+            const query = document.getElementById('ytmusic-search-input').value;
+            if (!query) return;
+
+            const resultsDiv = document.getElementById('ytmusic-results');
+            resultsDiv.innerHTML = '<p style="color: #888; text-align: center;">Searching...</p>';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/ytmusic/search?q=${encodeURIComponent(query)}`);
+                const data = await res.json();
+
+                resultsDiv.innerHTML = '';
+
+                if (data.tracks && data.tracks.length > 0) {
+                    data.tracks.forEach((track, index) => {
+                        const div = document.createElement('div');
+                        const resultId = `ytmusic-track-${index}`;
+                        div.id = resultId;
+                        div.className = 'result-item';
+                        div.onclick = () => selectItem('ytmusic', track, resultId);
+
+                        const imgUrl = track.thumbnails && track.thumbnails.length > 0
+                            ? track.thumbnails[0].url
+                            : '';
+                        const artistNames = track.artists
+                            ? track.artists.map(a => a.name).join(', ')
+                            : 'Unknown Artist';
+
+                        div.innerHTML = `
+                            <img src="${imgUrl}" alt="Album Art" onerror="this.src='https://via.placeholder.com/60?text=YTM'">
+                            <div class="result-info">
+                                <div class="result-title">${track.title}</div>
+                                <div class="result-subtitle">${artistNames}</div>
+                            </div>
+                        `;
+                        resultsDiv.appendChild(div);
+                    });
+                } else {
+                    resultsDiv.innerHTML = '<p style="color: #888; text-align: center;">No results found.</p>';
+                }
+            } catch (e) {
+                resultsDiv.innerHTML = `<p style="color: var(--pink); text-align: center;">Error: ${e.message}</p>`;
+            }
+        }
+
+        // YouTube URL Logic
+        function submitYoutubeUrl() {
+            const url = document.getElementById('youtube-url').value;
+            if (!url) {
+                showMessage('Please enter a YouTube URL', 'error');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('youtube-results');
+            const resultId = 'yt-result-' + Date.now();
+
+            resultsDiv.innerHTML = `
+                <div id="${resultId}" class="result-item" onclick="selectItem('youtube', {url: '${url}'}, '${resultId}')">
+                    <img src="https://img.youtube.com/vi/${getYouTubeID(url)}/0.jpg" onerror="this.src='https://via.placeholder.com/60?text=YT'" alt="YT">
+                    <div class="result-info">
+                        <div class="result-title">YouTube Video</div>
+                        <div class="result-subtitle">${url}</div>
+                    </div>
+                </div>
+            `;
+
+            selectItem('youtube', { url: url }, resultId);
+        }
+
+        function getYouTubeID(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : 'default';
+        }
+
+        // Stop mode
+        async function stopMode() {
+            try {
+                const response = await fetch(`${API_BASE}/api/mode/stop`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+                showMessage('Mode stopped', 'success');
+            } catch (error) {
+                showMessage('Connection error: ' + error.message, 'error');
+            }
+        }
+
+        // GLOBAL DANCE HANDLER
+        async function handleGlobalDance() {
+            if (!selectedItem) return;
+
+            if (selectedMode !== 'beat_bandit') {
+                selectMode('beat_bandit');
+            }
+
+            try {
+                const statusRes = await fetch(`${API_BASE}/api/status`);
+                const statusData = await statusRes.json();
+
+                if (statusData.current_mode !== 'beat_bandit') {
+                    await fetch(`${API_BASE}/api/mode/beat_bandit/start`, { method: 'POST' });
+                }
+
+                if (selectedItem.type === 'ytmusic') {
+                    const res = await fetch(`${API_BASE}/api/mode/beat_bandit/track`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(selectedItem.data)
+                    });
+
+                    if (res.ok) {
+                        const artistNames = selectedItem.data.artists
+                            ? selectedItem.data.artists.map(a => a.name).join(', ')
+                            : 'Unknown';
+                        showMessage(`Playing: ${selectedItem.data.title} - ${artistNames}`, 'success');
+                    } else {
+                        throw new Error('Failed to set track');
+                    }
+
+                } else if (selectedItem.type === 'youtube') {
+                    const res = await fetch(`${API_BASE}/api/mode/beat_bandit/youtube`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: selectedItem.data.url })
+                    });
+
+                    if (res.ok) {
+                        showMessage('YouTube URL submitted. Analysis starting...', 'success');
+                    } else {
+                        throw new Error('Failed to submit YouTube URL');
+                    }
+                }
+            } catch (e) {
+                showMessage(e.message, 'error');
+            }
+        }
+
+        // Update slider display
+        function updateSlider(name, value) {
+            const displayMap = {
+                'intensity': 'intensity-value',
+                'smoothing': 'smoothing-value',
+                'z_threshold': 'z-threshold-value',
+                'max_pitch_at_low_z': 'max-pitch-value'
+            };
+            document.getElementById(displayMap[name]).textContent = parseFloat(value).toFixed(3);
+        }
+
+        // Apply safety config
+        async function applySafetyConfig() {
+            const config = {
+                smoothing_alpha: parseFloat(document.getElementById('smoothing-slider').value),
+                z_threshold: parseFloat(document.getElementById('z-threshold-slider').value),
+                max_pitch_at_low_z: parseFloat(document.getElementById('max-pitch-slider').value)
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/safety`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                if (response.ok) {
+                    showMessage('Safety config updated', 'success');
+                } else {
+                    showMessage('Failed to update config', 'error');
+                }
+            } catch (error) {
+                showMessage('Connection error: ' + error.message, 'error');
+            }
+        }
+
+        // Show message
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = 'message ' + type;
+
+            setTimeout(() => {
+                msg.className = 'message';
+            }, 3000);
+        }
+
+        // Poll status
+        async function pollStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/api/status`);
+                const data = await response.json();
+                updateStatusDisplay(data);
+            } catch (error) {
+                document.getElementById('connection-status').textContent = 'Error';
+                document.getElementById('connection-status').className = 'status-value disconnected';
+            }
+        }
+
+        // Load current safety config
+        async function loadSafetyConfig() {
+            try {
+                const response = await fetch(`${API_BASE}/api/safety`);
+                const config = await response.json();
+
+                if (config.smoothing_alpha !== undefined) {
+                    document.getElementById('smoothing-slider').value = config.smoothing_alpha;
+                    document.getElementById('smoothing-value').textContent = config.smoothing_alpha.toFixed(3);
+                }
+                if (config.z_threshold !== undefined) {
+                    document.getElementById('z-threshold-slider').value = config.z_threshold;
+                    document.getElementById('z-threshold-value').textContent = config.z_threshold.toFixed(3);
+                }
+                if (config.max_pitch_at_low_z !== undefined) {
+                    document.getElementById('max-pitch-slider').value = config.max_pitch_at_low_z;
+                    document.getElementById('max-pitch-value').textContent = config.max_pitch_at_low_z.toFixed(3);
+                }
+            } catch (error) {
+                console.error('Failed to load safety config:', error);
+            }
+        }
+
+        // WebSocket connection
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/api/ws`;
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                if (statusInterval) {
+                    clearInterval(statusInterval);
+                    statusInterval = null;
+                }
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                updateStatusDisplay(data);
+            };
+
+            ws.onerror = (error) => {
+                console.log('WebSocket error, falling back to polling');
+                ws.close();
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket closed, falling back to polling');
+                ws = null;
+                if (!statusInterval) {
+                    statusInterval = setInterval(pollStatus, 500);
+                }
+                setTimeout(connectWebSocket, 5000);
+            };
+        }
+
+        // Update status display from data object
+        function updateStatusDisplay(data) {
+            const connEl = document.getElementById('connection-status');
+            connEl.textContent = data.connected ? 'OK' : 'OFF';
+            connEl.className = 'status-value ' + (data.connected ? 'connected' : 'disconnected');
+
+            document.getElementById('current-mode').textContent = data.current_mode || '-';
+
+            if (data.mode_status) {
+                const status = data.mode_status;
+
+                document.getElementById('current-state').textContent = status.state || 'Idle';
+
+                let bpmText = '-';
+                if (status.bpm) {
+                    bpmText = `${status.bpm.toFixed(1)}`;
+                }
+                if (status.current_beat !== undefined && status.total_beats) {
+                    bpmText = `${status.current_beat}/${status.total_beats}`;
+                }
+                if (status.beat_count !== undefined) {
+                    bpmText = `Beat ${status.beat_count + 1}`;
+                }
+                document.getElementById('bpm-display').textContent = bpmText;
+
+                const progress = (status.progress || 0) * 100;
+                document.getElementById('progress-fill').style.width = progress + '%';
+
+                // Update Terminal if in Connected Choreographer
+                if (data.current_mode === 'beat_bandit' && status.logs) {
+                    updateTerminal(status.logs);
+                }
+
+                // Auto-save profile when calibration completes
+                if (data.current_mode === 'live_groove' && status.calibrated && pendingCalibrationSave) {
+                    pendingCalibrationSave = false;
+                    saveProfile();
+                    stopMode();
+                }
+
+            } else {
+                document.getElementById('current-state').textContent = 'Idle';
+                document.getElementById('bpm-display').textContent = '-';
+                document.getElementById('progress-fill').style.width = '0%';
+            }
+        }
+
+        // Update Terminal Display
+        function updateTerminal(logs) {
+            const term = document.getElementById('status-terminal');
+            if (!term) return;
+
+            const lastLog = logs[logs.length - 1];
+            if (term.dataset.lastLog === lastLog) return;
+            term.dataset.lastLog = lastLog;
+
+            term.innerHTML = logs.map(log => {
+                const isError = log.toLowerCase().includes('error') || log.toLowerCase().includes('failed');
+                return `<div class="terminal-line ${isError ? 'error' : ''}">${log}</div>`;
+            }).join('');
+
+            term.scrollTop = term.scrollHeight;
+        }
+
+        // Move dampening state
+        let moveValues = {};
+        let mirrorValues = {};
+        let mirrorableMoves = [];
+
+        // Load moves from API
+        async function loadMoves() {
+            try {
+                const [movesRes, mirrorRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/moves`),
+                    fetch(`${API_BASE}/api/moves/mirror`)
+                ]);
+
+                const movesData = await movesRes.json();
+                const mirrorData = await mirrorRes.json();
+
+                moveValues = movesData.moves || {};
+                mirrorValues = mirrorData.mirror || {};
+                mirrorableMoves = mirrorData.mirrorable || [];
+
+                renderMoves();
+            } catch (error) {
+                console.error('Failed to load moves:', error);
+                document.getElementById('moves-grid').innerHTML =
+                    '<p style="color: var(--pink);">Failed to load moves</p>';
+            }
+        }
+
+        // Render move sliders in grid
+        function renderMoves() {
+            const container = document.getElementById('moves-grid');
+            const sortedMoves = Object.keys(moveValues).sort();
+
+            if (sortedMoves.length === 0) {
+                container.innerHTML = '<p style="color: #666;">No moves available</p>';
+                return;
+            }
+
+            container.innerHTML = sortedMoves.map(move => {
+                const isMirrorable = mirrorableMoves.includes(move);
+                const isMirrored = mirrorValues[move] || false;
+
+                return `
+                    <div class="move-item">
+                        <div class="move-header">
+                            <span class="move-name" title="${move}">${move}</span>
+                            <span class="move-value" id="move-val-${move}">${moveValues[move].toFixed(2)}</span>
+                        </div>
+                        <input type="range" class="move-slider"
+                            data-move="${move}"
+                            min="0" max="2" step="0.05"
+                            value="${moveValues[move]}"
+                            oninput="updateMoveValue('${move}', this.value)">
+                        ${isMirrorable ? `
+                            <div class="mirror-toggle">
+                                <label>
+                                    <input type="checkbox" ${isMirrored ? 'checked' : ''}
+                                        onchange="toggleMirror('${move}', this.checked)">
+                                    <span>+ Mirrored</span>
+                                </label>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update move value display and auto-apply
+        function updateMoveValue(move, value) {
+            moveValues[move] = parseFloat(value);
+            document.getElementById(`move-val-${move}`).textContent = parseFloat(value).toFixed(2);
+            applyMoveSingle(move, parseFloat(value));
+        }
+
+        async function applyMoveSingle(move, value) {
+            try {
+                await fetch(`${API_BASE}/api/moves`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [move]: value })
+                });
+            } catch (error) {
+                console.error('Failed to apply move:', error);
+            }
+        }
+
+        function toggleMirror(move, checked) {
+            mirrorValues[move] = checked;
+            applyMirrorSingle(move, checked);
+        }
+
+        async function applyMirrorSingle(move, mirrored) {
+            try {
+                await fetch(`${API_BASE}/api/moves/mirror`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [move]: mirrored })
+                });
+            } catch (error) {
+                console.error('Failed to apply mirror:', error);
+            }
+        }
+
+        async function resetMoves() {
+            try {
+                const [dampeningRes, mirrorRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/moves/reset`, { method: 'POST' }),
+                    fetch(`${API_BASE}/api/moves/mirror/reset`, { method: 'POST' })
+                ]);
+
+                if (dampeningRes.ok && mirrorRes.ok) {
+                    const dampeningData = await dampeningRes.json();
+                    const mirrorData = await mirrorRes.json();
+                    moveValues = dampeningData.moves || {};
+                    mirrorValues = mirrorData.mirror || {};
+                    renderMoves();
+                    showMessage('Moves reset to defaults', 'success');
+                } else {
+                    showMessage('Failed to reset moves', 'error');
+                }
+            } catch (error) {
+                showMessage('Connection error: ' + error.message, 'error');
+            }
+        }
+
+        // Mode settings state
+        let modeSettings = {
+            live_groove: { intensity: 1.0, volume_gate_threshold: 0.005, bpm_stability_threshold: 8.0 },
+            beat_bandit: {
+                amplitude_scale: 0.5,
+                interpolation_alpha: 0.3,
+                antenna_energy_threshold: 0.25,
+                antenna_gain: 8,
+                antenna_sensitivity: 0.6,
+                antenna_amplitude: 1.75
+            },
+            synthwave_serenade: {
+                intensity: 1.0,
+                liveliness: 1.0,
+                strain_threshold: 15.0
+            }
+        };
+
+        // Load mode settings from API
+        async function loadModeSettings() {
+            try {
+                const response = await fetch(`${API_BASE}/api/mode-settings`);
+                const data = await response.json();
+                modeSettings = data.settings || modeSettings;
+                renderModeSettings();
+            } catch (error) {
+                console.error('Failed to load mode settings:', error);
+            }
+        }
+
+        // Render mode settings to sliders
+        function renderModeSettings() {
+            // Live Groove
+            if (modeSettings.live_groove) {
+                const intensity = modeSettings.live_groove.intensity || 1.0;
+                document.getElementById('mode-live_groove-intensity-slider').value = intensity;
+                document.getElementById('mode-live_groove-intensity-value').textContent = intensity.toFixed(2);
+
+                const volThreshold = modeSettings.live_groove.volume_gate_threshold || 0.005;
+                document.getElementById('mode-live_groove-volume_gate_threshold-slider').value = volThreshold;
+                document.getElementById('mode-live_groove-volume_gate_threshold-value').textContent = volThreshold.toFixed(3);
+
+                const bpmThreshold = modeSettings.live_groove.bpm_stability_threshold || 8.0;
+                document.getElementById('mode-live_groove-bpm_stability_threshold-slider').value = bpmThreshold;
+                document.getElementById('mode-live_groove-bpm_stability_threshold-value').textContent = bpmThreshold.toFixed(2);
+            }
+
+            // Beat Bandit
+            if (modeSettings.beat_bandit) {
+                const s = modeSettings.beat_bandit;
+                const ampScale = s.amplitude_scale || 0.5;
+                const interpAlpha = s.interpolation_alpha || 0.3;
+                const antennaThreshold = s.antenna_energy_threshold || 0.25;
+                const antennaGain = s.antenna_gain || 8;
+                const antennaSensitivity = s.antenna_sensitivity || 0.6;
+                const antennaAmplitude = s.antenna_amplitude || 1.75;
+
+                document.getElementById('mode-beat_bandit-amplitude_scale-slider').value = ampScale;
+                document.getElementById('mode-beat_bandit-amplitude_scale-value').textContent = ampScale.toFixed(2);
+                document.getElementById('mode-beat_bandit-interpolation_alpha-slider').value = interpAlpha;
+                document.getElementById('mode-beat_bandit-interpolation_alpha-value').textContent = interpAlpha.toFixed(2);
+                document.getElementById('mode-beat_bandit-antenna_energy_threshold-slider').value = antennaThreshold;
+                document.getElementById('mode-beat_bandit-antenna_energy_threshold-value').textContent = antennaThreshold.toFixed(2);
+                document.getElementById('mode-beat_bandit-antenna_gain-slider').value = antennaGain;
+                document.getElementById('mode-beat_bandit-antenna_gain-value').textContent = Math.round(antennaGain);
+                document.getElementById('mode-beat_bandit-antenna_sensitivity-slider').value = antennaSensitivity;
+                document.getElementById('mode-beat_bandit-antenna_sensitivity-value').textContent = antennaSensitivity.toFixed(2);
+                document.getElementById('mode-beat_bandit-antenna_amplitude-slider').value = antennaAmplitude;
+                document.getElementById('mode-beat_bandit-antenna_amplitude-value').textContent = antennaAmplitude.toFixed(2);
+            }
+
+            // Synthwave Serenade
+            if (modeSettings.synthwave_serenade) {
+                const s = modeSettings.synthwave_serenade;
+
+                const intensity = s.intensity || 1.0;
+                const liveliness = s.liveliness || 1.0;
+                const strainThreshold = s.strain_threshold || 15.0;
+                const vocalResponse = s.vocal_response || 0.0;
+                const playbackVolume = s.playback_volume || 1.5;
+
+                document.getElementById('mode-synthwave_serenade-intensity-slider').value = intensity;
+                document.getElementById('mode-synthwave_serenade-intensity-value').textContent = intensity.toFixed(2);
+                document.getElementById('mode-synthwave_serenade-liveliness-slider').value = liveliness;
+                document.getElementById('mode-synthwave_serenade-liveliness-value').textContent = liveliness.toFixed(2);
+                document.getElementById('mode-synthwave_serenade-strain_threshold-slider').value = strainThreshold;
+                document.getElementById('mode-synthwave_serenade-strain_threshold-value').textContent = Math.round(strainThreshold);
+                document.getElementById('mode-synthwave_serenade-vocal_response-slider').value = vocalResponse;
+                document.getElementById('mode-synthwave_serenade-vocal_response-value').textContent = vocalResponse.toFixed(2);
+                document.getElementById('mode-synthwave_serenade-playback_volume-slider').value = playbackVolume;
+                document.getElementById('mode-synthwave_serenade-playback_volume-value').textContent = playbackVolume.toFixed(2);
+            }
+        }
+
+        // Update mode slider display and auto-apply
+        function updateModeSlider(mode, setting, value) {
+            if (!modeSettings[mode]) modeSettings[mode] = {};
+            modeSettings[mode][setting] = parseFloat(value);
+
+            let displayValue;
+            if (setting === 'antenna_gain') {
+                displayValue = Math.round(value);
+            } else if (setting === 'max_z' || setting === 'volume_gate_threshold') {
+                displayValue = parseFloat(value).toFixed(3);
+            } else {
+                displayValue = parseFloat(value).toFixed(2);
+            }
+            document.getElementById(`mode-${mode}-${setting}-value`).textContent = displayValue;
+
+            applyModeSettingSingle(mode, setting, parseFloat(value));
+        }
+
+        async function applyModeSettingSingle(mode, setting, value) {
+            try {
+                await fetch(`${API_BASE}/api/mode-settings/${mode}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [setting]: value })
+                });
+            } catch (error) {
+                console.error('Failed to apply setting:', error);
+            }
+        }
+
+        // Profile Management
+        let profileExists = false;
+
+        async function loadProfileStatus() {
+            try {
+                const res = await fetch(`${API_BASE}/api/profile/status`);
+                const data = await res.json();
+                profileExists = data.exists;
+            } catch (error) {
+                console.error('Failed to load profile status:', error);
+            }
+        }
+
+        async function saveProfile() {
+            try {
+                const res = await fetch(`${API_BASE}/api/profile/save`, {
+                    method: 'POST'
+                });
+
+                if (res.ok) {
+                    showMessage('Calibration saved!', 'success');
+                    profileExists = true;
+                } else {
+                    const err = await res.json();
+                    showMessage(err.detail || 'Failed to save profile', 'error');
+                }
+            } catch (error) {
+                showMessage('Error saving profile: ' + error.message, 'error');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSafetyConfig();
+            loadModeSettings();
+            loadMoves();
+            loadProfileStatus();
+            connectWebSocket();
+            pollStatus();
+            statusInterval = setInterval(pollStatus, 500);
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "test2"
+version = "1.0.4"
+description = "The ultimate dance app for Reachy Mini"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "reachy-mini",
+    "av>=11.0.0",
+    "numpy>=1.24.0",
+    "scipy",
+
+    "hydra-core",
+    "omegaconf",
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "pydantic>=2.0",
+    "httpx>=0.26.0",
+    "numba>=0.58.0",
+    "librosa>=0.10.0,<0.11.0",
+    "soundfile>=0.12.0",
+    "yt-dlp>=2024.1.0",
+    "ytmusicapi>=1.11.0",
+    "eclipse-zenoh>=1.0.0",
+    "reachy-mini-dances-library",
+    "ultralytics>=8.0.0",
+    "supervision>=0.19.0",
+    "huggingface_hub>=0.20.0",
+
+    "PyYAML>=6.0",  # Used by vendored audyn models for config loading
+]
+keywords = ["reachy-mini-app", "dance"]
+
+[project.optional-dependencies]
+disco_diva = [
+    "pyaudio>=0.2.14",  # Requires system PortAudio library (brew install portaudio on macOS)
+]
+
+[project.entry-points."reachy_mini_apps"]
+test2 = "test2.main:Test2"
+
+[tool.setuptools]
+package-dir = { "" = "." }
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.package-data]
+reachy_ultradancemix_9000 = ["**/*"]

@@ -1,0 +1,160 @@
+"""Reachy Ultra Dance Mix 9000 - Main Entry Point.
+
+A comprehensive dance application for Reachy Mini with three modes:
+- Live Groove: Real-time BPM-driven dancing from audio input
+- Beat Bandit: YouTube integration with beat analysis
+- Synthwave Serenade: Streaming audio control with face tracking
+
+This wraps the dance suite as a ReachyMiniApp for the Reachy Mini dashboard.
+"""
+
+import asyncio
+import logging
+import threading
+import time
+
+import uvicorn
+
+logger = logging.getLogger(__name__)
+
+from reachy_mini import ReachyMini, ReachyMiniApp
+
+from .app import app, initialize_with_robot, state
+
+
+class Test2(ReachyMiniApp):
+    """Ultra Dance Mix 9000 - Full dance suite for Reachy Mini.
+
+    Features:
+    - Live Groove: Dance to any music playing nearby using microphone input
+    - Beat Bandit: Play YouTube videos with synchronized dancing
+    - Synthwave Serenade: Stream audio for reactive movement and face tracking
+
+    The app provides a web UI for configuration and control.
+    """
+
+    # App icon emoji (shown in dashboard)
+    emoji: str = "🪩"
+    # URL for the custom settings page (served by our FastAPI app)
+    custom_app_url: str | None = "http://localhost:9000"
+    # Prevent daemon from starting its own basic server - we handle it ourselves
+    dont_start_webserver: bool = True
+
+    def run(self, reachy_mini: ReachyMini, stop_event: threading.Event):
+        """Run the dance suite.
+
+        This starts the FastAPI server which provides:
+        - Web UI for mode selection and configuration
+        - REST API for controlling dance modes
+        - WebSocket for real-time status updates
+        """
+        # Initialize app state with the provided robot
+        initialize_with_robot(reachy_mini)
+
+        # Debug: Print registered routes
+        logger.info(f"[UltraDanceMix9000] Routes registered: {len(app.routes)}")
+        for route in app.routes:
+            if hasattr(route, "path") and hasattr(route, "methods"):
+                logger.info(f"  {route.methods} {route.path}")
+
+        # Configure the server port
+        port = 9000
+
+        logger.info(
+            f"[UltraDanceMix9000] App object id: {id(app)}, routes: {len(app.routes)}"
+        )
+
+        # Create uvicorn config - use the app object directly
+        import logging
+
+        logging.getLogger(
+            "reachy_mini.daemon.backend.robot.backend.throttled"
+        ).setLevel(logging.ERROR)
+
+        config = uvicorn.Config(
+            app,
+            host="0.0.0.0",
+            port=port,
+            log_level="info",  # Enable info logging to see what's happening
+        )
+
+        # Create the server
+        server = uvicorn.Server(config)
+
+        # Run the server in a separate thread so we can monitor stop_event
+        server_thread = threading.Thread(target=server.run, daemon=True)
+        server_thread.start()
+
+        logger.info(f"[UltraDanceMix9000] Started on http://0.0.0.0:{port}")
+
+        # Main loop - captures frames and passes to motion controller (like VLM app)
+        # This is the "heartbeat" that feeds face tracking
+        frame_count = 0
+        while not stop_event.is_set():
+            # Capture frame and feed to motion controller for face tracking
+            # Only when synthwave_serenade mode is active (it uses MotionController)
+            if (
+                state.motion_controller is not None
+                and state.current_mode is not None
+                and state.current_mode.MODE_ID == "synthwave_serenade"
+                and state.current_mode.running
+            ):
+                try:
+                    frame = reachy_mini.media.get_frame()
+                    if frame is not None:
+                        state.motion_controller.update_face_tracking(frame)
+                        frame_count += 1
+                        if frame_count == 1:
+                            logger.info(
+                                f"[UltraDanceMix9000] First camera frame: {frame.shape}"
+                            )
+                        elif frame_count % 300 == 0:
+                            logger.info(
+                                f"[UltraDanceMix9000] Camera frames processed: {frame_count}"
+                            )
+                except Exception as e:
+                    if frame_count == 0:
+                        logger.info(f"[UltraDanceMix9000] Camera error: {e}")
+
+            time.sleep(0.033)  # ~30fps
+
+        # Cleanup
+        logger.info(f"[UltraDanceMix9000] {time.strftime('%H:%M:%S')} Stopping...")
+
+        # Stop any running dance mode
+        if state.current_mode and state.current_mode.running:
+            logger.info(
+                f"[UltraDanceMix9000] {time.strftime('%H:%M:%S')} Stopping current mode: {state.current_mode.MODE_ID}"
+            )
+            # Run async stop in a new event loop
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(state.current_mode.stop())
+                logger.info(
+                    f"[UltraDanceMix9000] {time.strftime('%H:%M:%S')} Mode stopped"
+                )
+            finally:
+                loop.close()
+
+        # Reset safety mixer
+        if state.safety_mixer:
+            logger.info(
+                f"[UltraDanceMix9000] {time.strftime('%H:%M:%S')} Resetting safety mixer"
+            )
+            state.safety_mixer.reset()
+
+        # Signal server to shutdown
+        logger.info(f"[UltraDanceMix9000] {time.strftime('%H:%M:%S')} Stopping server")
+        server.should_exit = True
+        server_thread.join(timeout=5.0)
+        logger.info(
+            f"[UltraDanceMix9000] {time.strftime('%H:%M:%S')} Server stopped (joined: {not server_thread.is_alive()})"
+        )
+
+        logger.info(f"[UltraDanceMix9000] {time.strftime('%H:%M:%S')} Stopped")
+
+
+if __name__ == "__main__":
+    instance = ReachyUltradancemix9000()
+    instance.wrapped_run()

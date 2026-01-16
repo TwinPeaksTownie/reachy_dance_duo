@@ -1,0 +1,22 @@
+{
+  "chicken_peck": 0.75,
+  "chin_lead": 0.8,
+  "dizzy_spin": 0.85,
+  "grid_snap": 0.85,
+  "groovy_sway_and_roll": 0.7,
+  "head_tilt_roll": 0.7,
+  "headbanger_combo": 0.65,
+  "interwoven_spirals": 0.7,
+  "jackson_square": 0.85,
+  "neck_recoil": 0.9,
+  "pendulum_swing": 0.85,
+  "polyrhythm_combo": 0.9,
+  "sharp_side_tilt": 0.95,
+  "side_glance_flick": 0.9,
+  "side_peekaboo": 0.7,
+  "side_to_side_sway": 0.7,
+  "simple_nod": 0.6,
+  "stumble_and_recover": 1.0,
+  "uh_huh_tilt": 0.8,
+  "yeah_nod": 0.85
+}

@@ -1,0 +1,41 @@
+# Spotify tokens (contains sensitive OAuth credentials)
+.spotify_tokens.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Downloaded audio files
+downloads/
+output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+B-mini-yt-mcp
+C-audio_reactor
+A-livegroovecurrent/
+
+# Virtual environment
+.venv/
+venv/
+
+# YouTube Music tokens
+.ytmusic_oauth.json
+.ytmusic_cookies.txt
+
+# Pretrained models (should be downloaded, not committed)
+pretrained/

@@ -1,0 +1,12 @@
+---
+title: Reachy Ultra Dance Mix 9000
+emoji: 🪩
+colorFrom: purple
+colorTo: pink
+sdk: static
+pinned: false
+short_description: Turn any song into a Reachy Dance Party
+tags:
+  - reachy_mini
+  - reachy_mini_python_app
+---

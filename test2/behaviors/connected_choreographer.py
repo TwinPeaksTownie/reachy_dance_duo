@@ -905,6 +905,20 @@ class ConnectedChoreographer(DanceMode):
 
             self._log("Audio Received")
 
+            # 1.5 Convert to WAV for compatibility (soundfile/play_sound needs wav usually)
+            self._log("Processing audio...")
+            wav_path = await loop.run_in_executor(
+                None, self._convert_to_wav, audio_path
+            )
+            
+            if not wav_path:
+                logger.error(f"[{self.MODE_NAME}] Conversion failed")
+                self._status["state"] = "error"
+                self.running = False
+                return
+                
+            audio_path = wav_path
+
             # 2. Analyze
             self._status["state"] = "analyzing"
             self._log("Analyzing Beats...")
@@ -1140,6 +1154,63 @@ class ConnectedChoreographer(DanceMode):
         self._start_audio_playback()
         self._dance_loop_local_audio(beat_times, sequence_assignments)
 
+    def _convert_to_wav(self, input_path: str) -> Optional[str]:
+        """Convert audio file to WAV using PyAV (decoding) and SoundFile (encoding).
+
+        This ensures we have a compatible file for playback (sf.read involved)
+        and analysis, without needing external ffmpeg binary.
+        """
+        try:
+            import soundfile as sf
+            
+            # Use PyAV to decode source (handles webm, m4a, etc.)
+            container = av.open(input_path)
+            stream = container.streams.audio[0]
+            
+            # Keep original rate if possible, or default to 44100
+            # stream.rate might be None in some containers
+            rate = stream.rate if stream.rate else 44100
+            
+            resampler = av.AudioResampler(
+                format="flt",
+                layout="stereo", # Convert to stereo for playback
+                rate=rate,
+            )
+
+            all_samples = []
+            for frame in container.decode(stream):
+                frame.pts = None
+                for resampled in resampler.resample(frame):
+                    # PyAV ndarray is (channels, samples)
+                    # SoundFile expects (samples, channels)
+                    all_samples.append(resampled.to_ndarray().T)
+                    
+            if not all_samples:
+                return None
+                
+            y = np.concatenate(all_samples, axis=0)
+            
+            # Output filename
+            wav_path = str(Path(input_path).with_suffix(".wav"))
+            
+            # Write WAV
+            sf.write(wav_path, y, rate)
+            logger.info(f"[{self.MODE_NAME}] Converted to WAV: {wav_path}")
+            
+            # Delete original if different
+            if wav_path != input_path:
+                try:
+                   os.remove(input_path)
+                except OSError:
+                   pass
+                   
+            return wav_path
+            
+        except Exception as e:
+            logger.error(f"[{self.MODE_NAME}] WAV conversion failed: {e}")
+            self._log(f"Audio conversion failed: {e}")
+            return None
+
     def _dance_loop_local_audio(
         self,
         beat_times: np.ndarray[Any, np.dtype[np.float64]],
@@ -1239,6 +1310,9 @@ class ConnectedChoreographer(DanceMode):
             return
 
         try:
+            # play_sound relies on soundfile which needs WAV usually
+            # We guaranteed WAV conversion in _prepare_and_start
             self.mini.media.play_sound(self.analysis.audio_path)
         except Exception as e:
             logger.error(f"[{self.MODE_NAME}] Audio playback error: {e}")
+            self._log(f"Playback error: {e}")

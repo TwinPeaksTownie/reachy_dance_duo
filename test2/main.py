@@ -156,5 +156,5 @@ class Test2(ReachyMiniApp):
 
 
 if __name__ == "__main__":
-    instance = ReachyUltradancemix9000()
+    instance = Test2()
     instance.wrapped_run()

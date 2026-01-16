@@ -731,8 +731,11 @@ class ConnectedChoreographer(DanceMode):
         # Threading
         self.stop_event = threading.Event()
         self.dance_thread: Optional[threading.Thread] = None
+        self.audio_thread: Optional[threading.Thread] = None
         self.audio_process: Optional[subprocess.Popen[Any]] = None
         self.prep_task: Optional[asyncio.Task[None]] = None
+        
+        self.audio_playback_data: Optional[np.ndarray[Any, np.dtype[np.float32]]] = None
 
         # Sequence state
         self.current_sequence: list[dict[str, Any]] = []
@@ -879,6 +882,62 @@ class ConnectedChoreographer(DanceMode):
         # Start background preparation task
         self.prep_task = asyncio.create_task(self._prepare_and_start(download_url))
 
+    def _audio_streaming_loop(self) -> None:
+        """Stream audio data to the robot in chunks."""
+        if self.audio_playback_data is None:
+            return
+            
+        logger.info(f"[{self.MODE_NAME}] Starting audio stream thread")
+        
+        # Audio settings
+        sr = 48000
+        chunk_time = 0.1  # 100ms
+        chunk_size = int(sr * chunk_time)
+        total_samples = len(self.audio_playback_data)
+        
+        idx = 0
+        
+        # Ensure media player is started
+        try:
+            self.mini.media.start_playing()
+        except Exception as e:
+            logger.error(f"[{self.MODE_NAME}] Failed to start media player: {e}")
+            return
+            
+        start_time = time.time()
+        
+        # Simple streaming loop
+        while not self.stop_event.is_set() and idx < total_samples:
+            iter_start = time.time()
+            
+            # Extract chunk
+            end = min(idx + chunk_size, total_samples)
+            chunk = self.audio_playback_data[idx:end]
+            
+            # Push to robot
+            try:
+                self.mini.media.push_audio_sample(chunk)
+            except Exception as e:
+                logger.error(f"[{self.MODE_NAME}] Push audio error: {e}")
+                break
+                
+            idx = end
+            
+            # Precision sleep to maintain timing
+            elapsed = time.time() - iter_start
+            sleep_time = max(0.0, chunk_time - elapsed)
+            time.sleep(sleep_time)
+            
+        logger.info(f"[{self.MODE_NAME}] Audio stream finished")
+
+    def _start_audio_playback(self) -> None:
+        """Start audio playback using manual streaming to bypass SDK bug."""
+        if self.audio_playback_data is None:
+            return
+
+        self.audio_thread = threading.Thread(target=self._audio_streaming_loop, daemon=True)
+        self.audio_thread.start()
+
     async def _prepare_and_start(self, download_url: str) -> None:
         """Background task to download, analyze, and start dancing."""
         try:
@@ -890,7 +949,6 @@ class ConnectedChoreographer(DanceMode):
             downloader = YouTubeDownloader(
                 self.config.download_dir, log_callback=self._log
             )
-            # Use run_in_executor for blocking I/O
             audio_path = await loop.run_in_executor(
                 None, downloader.download_audio, download_url
             )
@@ -905,30 +963,39 @@ class ConnectedChoreographer(DanceMode):
 
             self._log("Audio Received")
 
-            # 1.5 Convert to WAV for compatibility (soundfile/play_sound needs wav usually)
-            self._log("Processing audio...")
-            wav_path = await loop.run_in_executor(
-                None, self._convert_to_wav, audio_path
+            # 2. Load Audio for Playback (48kHz)
+            self._log("Loading audio...")
+            
+            # Load at 48kHz native for ReSpeaker
+            self.audio_playback_data, _ = await loop.run_in_executor(
+                    None, lambda: load_audio_av(audio_path, target_sr=48000)
             )
             
-            if not wav_path:
-                logger.error(f"[{self.MODE_NAME}] Conversion failed")
-                self._status["state"] = "error"
-                self.running = False
-                return
-                
-            audio_path = wav_path
+            if len(self.audio_playback_data) == 0:
+                 logger.error(f"[{self.MODE_NAME}] Low-level audio load failed")
+                 self._status["state"] = "error"
+                 self.running = False
+                 return
 
-            # 2. Analyze
+            # 3. Analyze (Downsample for speed)
             self._status["state"] = "analyzing"
             self._log("Analyzing Beats...")
-
-            # Run blocking analysis in executor
+            
+            # We can analyze the high-res data, but let's downsample for librosa speed
+            # Simple decimation (approximate)
+            analysis_sr = 12000 # 48000 / 4
+            analysis_audio = self.audio_playback_data[::4]
+            
+            # Create a dummy analysis object to reuse logic or modify Analyzer
+            # Actually, SongAnalyzer takes a path. We should modify it to take data or just save a temp small wav?
+            # Or just pass the path and let it load again (it's fast enough).
+            # Let's let Analyzer load from file separately to avoid refactoring Analyzer.
+            
             analyzer = SongAnalyzer(log_callback=self._log)
             self.analysis = await loop.run_in_executor(
                 None, analyzer.analyze, audio_path
             )
-            assert self.analysis is not None  # Analysis always returns a result
+            assert self.analysis is not None
 
             # Log envelope stats
             if len(self.analysis.energy_envelope) > 0:
@@ -940,12 +1007,12 @@ class ConnectedChoreographer(DanceMode):
             self._status["tempo"] = self.analysis.tempo
             self._status["total_beats"] = len(self.analysis.beat_times)
 
-            # 3. Plan / Hype
+            # 4. Plan / Hype
             self._log("Planning moves that will blow your mind")
-            await asyncio.sleep(1.5)  # Dramatic pause
+            await asyncio.sleep(1.5)
 
-            # 4. Start Dance Thread
-            if not self.running:  # Check if stopped during prep
+            # 5. Start Dance Thread
+            if not self.running:
                 return
 
             self.stop_event.clear()
@@ -962,6 +1029,12 @@ class ConnectedChoreographer(DanceMode):
             logger.info(
                 f"[{self.MODE_NAME}] Started - dancing to {self.analysis.tempo:.1f} BPM"
             )
+            
+            # Cleanup source file now that we have data in memory
+            try:
+                os.remove(audio_path)
+            except Exception:
+                pass
 
         except Exception as e:
             logger.error(f"[{self.MODE_NAME}] Preparation failed: {e}")
@@ -970,7 +1043,6 @@ class ConnectedChoreographer(DanceMode):
             self.running = False
             self._status["running"] = False
             import traceback
-
             traceback.print_exc()
 
     async def stop(self) -> None:
@@ -1003,6 +1075,10 @@ class ConnectedChoreographer(DanceMode):
         if self.dance_thread and self.dance_thread.is_alive():
             self.dance_thread.join(timeout=2.0)
         self.dance_thread = None
+        
+        if self.audio_thread and self.audio_thread.is_alive():
+            self.audio_thread.join(timeout=2.0)
+        self.audio_thread = None
 
         # Return to neutral
         self.mixer.reset()

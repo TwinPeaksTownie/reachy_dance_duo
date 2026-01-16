@@ -1,5 +1,5 @@
 ---
-title: Reachy Ultra Dance Mix 9000
+title: Reachy Wireless Lite
 emoji: 🪩
 colorFrom: purple
 colorTo: pink

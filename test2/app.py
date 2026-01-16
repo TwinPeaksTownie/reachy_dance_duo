@@ -16,6 +16,8 @@ from typing import Any, AsyncGenerator, Optional, cast
 import numpy as np
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 
 from pydantic import BaseModel
@@ -25,7 +27,6 @@ from reachy_mini import ReachyMini
 from . import mode_settings, move_config
 from .behaviors.base import DanceMode
 from .behaviors.connected_choreographer import ConnectedChoreographer
-from .behaviors.synthwave_serenade import SynthwaveSerenade
 from .behaviors.live_groove import LiveGroove
 from .config import APP_CONFIG, get_default_safety_config
 from .core.motion_controller import MotionController
@@ -88,7 +89,6 @@ def initialize_with_robot(mini: ReachyMini) -> None:
     # Register available modes
     state.modes = {
         "live_groove": LiveGroove,
-        "synthwave_serenade": SynthwaveSerenade,
         "beat_bandit": ConnectedChoreographer,
     }
     logger.info(f"[UltraDanceMix9000] Registered modes: {list(state.modes.keys())}")
@@ -125,6 +125,24 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Static file path
+STATIC_DIR = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+# API Endpoints
+@app.get("/", response_model=None)
+async def root() -> FileResponse | HTMLResponse:
+    """Serve the config UI."""
+    index_path = STATIC_DIR / "index.html"
+    if index_path.exists():
+        return FileResponse(index_path)
+    else:
+        return HTMLResponse(
+            content="<h1>Reachy Dance Suite</h1><p>Static files not found.</p>"
+        )
 
 
 # Pydantic models for API
@@ -223,28 +241,6 @@ async def start_mode(
             raise HTTPException(status_code=500, detail="Failed to initialize track")
         state.current_mode = mode_instance
 
-    elif mode_id == "synthwave_serenade":
-        # DiscoAudioDancer prerequisites
-        req_status = await check_synthwave_serenade_requirements()
-        if not req_status["ready"]:
-            missing_reqs = []
-            if not req_status["pyaudio_installed"]:
-                missing_reqs.append("PyAudio")
-            if not req_status["blackhole_installed"]:
-                missing_reqs.append("BlackHole")
-            raise HTTPException(
-                status_code=503,
-                detail=f"Prerequisites not met for synthwave_serenade: {', '.join(missing_reqs)}",
-            )
-        # Synthwave Serenade uses MotionController for breathing + face tracking
-        if state.motion_controller is None:
-            raise HTTPException(
-                status_code=503, detail="MotionController not initialized"
-            )
-        dd_class = cast(Any, mode_class)
-        state.current_mode = dd_class(
-            state.safety_mixer, state.mini, state.motion_controller
-        )
     else:
         # Other modes use safety_mixer
         state.current_mode = mode_class(state.safety_mixer)
@@ -652,114 +648,7 @@ async def set_youtube_url(request: dict[str, Any]) -> dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Synthwave Serenade Requirements Endpoints
-@app.get("/api/synthwave-serenade/requirements")
-async def check_synthwave_serenade_requirements() -> dict[str, Any]:
-    """Check if Synthwave Serenade requirements (pyaudio, BlackHole) are installed."""
-    import subprocess
-    import sys
 
-    # Check if pyaudio is available
-    from .core.audio_stream import PYAUDIO_AVAILABLE
-
-    # Check if BlackHole is installed (look for BlackHole audio device)
-    blackhole_installed = False
-
-    # Ensure brew is in PATH for GUI apps (Reachy Desktop)
-    import os
-
-    homebrew_paths = ["/opt/homebrew/bin", "/usr/local/bin"]
-    path = os.environ.get("PATH", "")
-    for p in homebrew_paths:
-        if os.path.isdir(p) and p not in path:
-            logger.info(f"[SynthwaveSerenade] Adding {p} to PATH")
-            path = f"{p}:{path}"
-    os.environ["PATH"] = path
-
-    if PYAUDIO_AVAILABLE:
-        try:
-            from .core.audio_stream import AudioStream
-
-            devices = AudioStream.list_devices()
-            blackhole_installed = any("BlackHole" in d.get("name", "") for d in devices)
-        except Exception:
-            pass
-
-    # Fallback: Check filesystem for BlackHole driver if not found via PyAudio
-    # This handles the case where PyAudio isn't installed yet, but BlackHole is.
-    if not blackhole_installed:
-        blackhole_installed = os.path.exists(
-            "/Library/Audio/Plug-Ins/HAL/BlackHole2ch.driver"
-        )
-
-    # Check if brew is installed
-    brew_installed = False
-    try:
-        subprocess.run(["brew", "--version"], capture_output=True, check=True)
-        brew_installed = True
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
-
-    return {
-        "pyaudio_installed": PYAUDIO_AVAILABLE,
-        "blackhole_installed": blackhole_installed,
-        "brew_installed": brew_installed,
-        "ready": PYAUDIO_AVAILABLE and blackhole_installed,
-        "platform": sys.platform,
-    }
-
-
-@app.post("/api/synthwave-serenade/install")
-async def install_synthwave_serenade_requirements() -> dict[str, Any]:
-    """Install Synthwave Serenade python requirements (pyaudio).
-
-    System requirements (PortAudio, BlackHole) must be installed manually via brew.
-    """
-    import os
-    import subprocess
-    import sys
-
-    if sys.platform != "darwin":
-        raise HTTPException(
-            status_code=400,
-            detail="Synthwave Serenade installation only supported on macOS",
-        )
-
-    try:
-        # Find portaudio location via brew
-        brew_prefix = subprocess.check_output(
-            ["brew", "--prefix", "portaudio"], text=True
-        ).strip()
-
-        # Set compiler flags
-        env = os.environ.copy()
-        env["CFLAGS"] = f"-I{brew_prefix}/include"
-        env["LDFLAGS"] = f"-L{brew_prefix}/lib"
-
-        # Install pyaudio via pip with flags
-        logger.info(f"[Install] Installing pyaudio using prefix: {brew_prefix}")
-        result = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "pyaudio"],
-            capture_output=True,
-            text=True,
-            timeout=300,
-            env=env,
-        )
-        if result.returncode != 0:
-            raise Exception(f"pyaudio installation failed: {result.stderr}")
-
-        return {
-            "status": "success",
-            "message": "PyAudio installed successfully. Please ensure you have run the system setup command and then reboot your machine.",
-        }
-
-    except subprocess.CalledProcessError:
-        raise HTTPException(
-            status_code=500,
-            detail="Could not find portaudio via brew. Did you run the 'Copy Install Command' step?",
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Installation failed: {str(e)}")
 
 
 # WebSocket for real-time status streaming

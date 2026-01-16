@@ -87,36 +87,9 @@ class Test2(ReachyMiniApp):
 
         logger.info(f"[UltraDanceMix9000] Started on http://0.0.0.0:{port}")
 
-        # Main loop - captures frames and passes to motion controller (like VLM app)
-        # This is the "heartbeat" that feeds face tracking
-        frame_count = 0
+        # Main loop - waiting for stop event
         while not stop_event.is_set():
-            # Capture frame and feed to motion controller for face tracking
-            # Only when synthwave_serenade mode is active (it uses MotionController)
-            if (
-                state.motion_controller is not None
-                and state.current_mode is not None
-                and state.current_mode.MODE_ID == "synthwave_serenade"
-                and state.current_mode.running
-            ):
-                try:
-                    frame = reachy_mini.media.get_frame()
-                    if frame is not None:
-                        state.motion_controller.update_face_tracking(frame)
-                        frame_count += 1
-                        if frame_count == 1:
-                            logger.info(
-                                f"[UltraDanceMix9000] First camera frame: {frame.shape}"
-                            )
-                        elif frame_count % 300 == 0:
-                            logger.info(
-                                f"[UltraDanceMix9000] Camera frames processed: {frame_count}"
-                            )
-                except Exception as e:
-                    if frame_count == 0:
-                        logger.info(f"[UltraDanceMix9000] Camera error: {e}")
-
-            time.sleep(0.033)  # ~30fps
+            time.sleep(0.1)
 
         # Cleanup
         logger.info(f"[UltraDanceMix9000] {time.strftime('%H:%M:%S')} Stopping...")

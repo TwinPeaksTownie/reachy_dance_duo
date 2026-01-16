@@ -243,68 +243,7 @@
                 </div>
             </div>
 
-            <!-- Synthwave Serenade Settings -->
-            <!-- Synthwave Serenade Panel Removed -->
-            <div id="settings-synthwave_serenade" class="mode-settings-panel" style="display:none!important">
-                <h3 class="mode-title">Mode Disabled</h3>
-                </h3>
 
-                <div class="slider-group">
-                    <div class="slider-label">
-                        <span>Movement Intensity</span>
-                        <span id="mode-synthwave_serenade-intensity-value" class="slider-value">1.00</span>
-                    </div>
-                    <input type="range" id="mode-synthwave_serenade-intensity-slider" min="0.2" max="2.0" step="0.1"
-                        value="1.0" oninput="updateModeSlider('synthwave_serenade', 'intensity', this.value)">
-                    <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Overall dance movement size</div>
-                </div>
-
-                <div class="slider-group">
-                    <div class="slider-label">
-                        <span>Sway</span>
-                        <span id="mode-synthwave_serenade-liveliness-value" class="slider-value">1.00</span>
-                    </div>
-                    <input type="range" id="mode-synthwave_serenade-liveliness-slider" min="0.0" max="5.0" step="0.1"
-                        value="1.0" oninput="updateModeSlider('synthwave_serenade', 'liveliness', this.value)">
-                    <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Side-to-side breathing and antenna
-                        motion</div>
-                </div>
-
-                <div class="slider-group">
-                    <div class="slider-label">
-                        <span>Body Independence</span>
-                        <span id="mode-synthwave_serenade-strain_threshold-value" class="slider-value">15</span>
-                    </div>
-                    <input type="range" id="mode-synthwave_serenade-strain_threshold-slider" min="5" max="45" step="5"
-                        value="15" oninput="updateModeSlider('synthwave_serenade', 'strain_threshold', this.value)">
-                    <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Higher = head moves more
-                        independently from body</div>
-                </div>
-
-                <div class="slider-group">
-                    <div class="slider-label">
-                        <span>Vocal Response</span>
-                        <span id="mode-synthwave_serenade-vocal_response-value" class="slider-value">0.00</span>
-                    </div>
-                    <input type="range" id="mode-synthwave_serenade-vocal_response-slider" min="-2.0" max="2.0"
-                        step="0.1" value="0.0"
-                        oninput="updateModeSlider('synthwave_serenade', 'vocal_response', this.value)">
-                    <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Vocal isolation motion (Speech
-                        Tapper). Negative values = Nod UP.</div>
-                </div>
-
-                <div class="slider-group">
-                    <div class="slider-label">
-                        <span>Playback Volume</span>
-                        <span id="mode-synthwave_serenade-playback_volume-value" class="slider-value">1.50</span>
-                    </div>
-                    <input type="range" id="mode-synthwave_serenade-playback_volume-slider" min="0.5" max="2.0"
-                        step="0.1" value="1.5"
-                        oninput="updateModeSlider('synthwave_serenade', 'playback_volume', this.value)">
-                    <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Audio playback volume (1.0 = normal,
-                        2.0 = 2x louder)</div>
-                </div>
-            </div>
 
             <div class="controls">
                 <button id="start-btn" class="control-btn start-btn" onclick="startMode()">Dance!</button>
@@ -400,54 +339,7 @@
     </div>
 
     <!-- Synthwave Serenade Requirements Overlay -->
-    <div id="synthwave-serenade-overlay" class="requirements-overlay" style="display: none;">
-        <div class="requirements-modal">
-            <h2>Synthwave Serenade Setup Required</h2>
-            <p>Synthwave Serenade requires PyAudio and BlackHole to work. BlackHole creates a virtual audio device that
-                captures
-                your computer's audio output.</p>
 
-            <div class="requirements-status" id="requirements-status">
-                <div class="status-item">
-                    <span>Homebrew:</span>
-                    <span id="brew-status">Checking...</span>
-                </div>
-                <div class="status-item">
-                    <span>PyAudio:</span>
-                    <span id="pyaudio-status">Checking...</span>
-                </div>
-                <div class="status-item">
-                    <span>BlackHole:</span>
-                    <span id="blackhole-status">Checking...</span>
-                </div>
-            </div>
-
-            <div class="requirements-note">
-                <span class="note-header">Manual Setup Required</span>
-                <span class="note-content">
-                    1. Click <strong>Copy Install Command</strong> and run it in your terminal (password required).<br>
-                    2. Click <strong>Finalize Install</strong> below.<br>
-                    3. <strong>Reboot</strong> your computer manually.
-                </span>
-            </div>
-
-            <div class="requirements-actions">
-                <button class="control-btn secondary-btn" onclick="closeDiscoOverlay()">Cancel</button>
-                <button class="control-btn reboot-btn" onclick="copyInstallCommand()" id="copy-btn">Copy Install
-                    Command</button>
-                <button class="control-btn install-btn" onclick="installSynthwaveRequirements()"
-                    id="install-btn-reqs">Finalize
-                    Install</button>
-            </div>
-
-            <div id="install-progress" style="display: none; margin-top: 15px; text-align: center;">
-                <p>Installing... This may take a few minutes.</p>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: 100%; animation: pulse 1.5s ease-in-out infinite;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script>
         const API_BASE = '';  // Same origin
@@ -465,87 +357,13 @@
             el.classList.toggle('open');
         }
 
-        // Synthwave Serenade Requirements Check
-        async function checkSynthwaveRequirements() {
-            try {
-                const res = await fetch(`${API_BASE}/api/synthwave-serenade/requirements`);
-                const data = await res.json();
 
-                document.getElementById('brew-status').textContent = data.brew_installed ? '✓ Installed' : '✗ Not installed';
-                document.getElementById('brew-status').style.color = data.brew_installed ? '#4ade80' : '#f87171';
-
-                document.getElementById('pyaudio-status').textContent = data.pyaudio_installed ? '✓ Installed' : '✗ Not installed';
-                document.getElementById('pyaudio-status').style.color = data.pyaudio_installed ? '#4ade80' : '#f87171';
-
-                document.getElementById('blackhole-status').textContent = data.blackhole_installed ? '✓ Installed' : '✗ Not installed';
-                document.getElementById('blackhole-status').style.color = data.blackhole_installed ? '#4ade80' : '#f87171';
-
-                return data.ready;
-            } catch (error) {
-                console.error('Failed to check requirements:', error);
-                return false;
-            }
-        }
-
-        function copyInstallCommand() {
-            const command = "brew install portaudio && brew install --cask blackhole-2ch";
-            navigator.clipboard.writeText(command).then(() => {
-                showMessage('Command copied to clipboard! Paste it in your terminal.', 'success');
-            }, (err) => {
-                console.error('Could not copy text: ', err);
-                showMessage('Failed to copy command.', 'error');
-            });
-        }
-
-        async function installSynthwaveRequirements() {
-            const installBtn = document.getElementById('install-btn-reqs');
-            const progress = document.getElementById('install-progress');
-
-            installBtn.disabled = true;
-            progress.style.display = 'block';
-
-            try {
-                const res = await fetch(`${API_BASE}/api/synthwave-serenade/install`, {
-                    method: 'POST'
-                });
-
-                if (!res.ok) {
-                    const err = await res.json();
-                    throw new Error(err.detail || 'Installation failed');
-                }
-
-                const data = await res.json();
-                showMessage(data.message, 'success');
-
-                // Refresh requirements check
-                checkSynthwaveRequirements();
-
-            } catch (error) {
-                showMessage('Installation failed: ' + error.message, 'error');
-            } finally {
-                installBtn.disabled = false;
-                progress.style.display = 'none';
-            }
-        }
-
-        function closeDiscoOverlay() {
-            document.getElementById('synthwave-serenade-overlay').style.display = 'none';
-            // Switch back to Live Groove
-            selectMode('live_groove');
-        }
 
         // Mode selection
         async function selectMode(mode) {
             selectedMode = mode;
 
-            // Check Synthwave Serenade requirements before switching
-            if (mode === 'synthwave_serenade') {
-                const ready = await checkSynthwaveRequirements();
-                if (!ready) {
-                    document.getElementById('synthwave-serenade-overlay').style.display = 'flex';
-                    return; // Don't switch mode yet
-                }
-            }
+
 
             // Update button states
             document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -679,7 +497,7 @@
 
                 const modeNames = {
                     'live_groove': 'Live Groove',
-                    'synthwave_serenade': 'Synthwave Serenade',
+
                     'beat_bandit': 'Beat Bandit',
                 };
                 const modeName = modeNames[selectedMode] || selectedMode;
@@ -1164,11 +982,7 @@
                 antenna_sensitivity: 0.6,
                 antenna_amplitude: 1.75
             },
-            synthwave_serenade: {
-                intensity: 1.0,
-                liveliness: 1.0,
-                strain_threshold: 15.0
-            }
+
         };
 
         // Load mode settings from API
@@ -1224,27 +1038,7 @@
                 document.getElementById('mode-beat_bandit-antenna_amplitude-value').textContent = antennaAmplitude.toFixed(2);
             }
 
-            // Synthwave Serenade
-            if (modeSettings.synthwave_serenade) {
-                const s = modeSettings.synthwave_serenade;
 
-                const intensity = s.intensity || 1.0;
-                const liveliness = s.liveliness || 1.0;
-                const strainThreshold = s.strain_threshold || 15.0;
-                const vocalResponse = s.vocal_response || 0.0;
-                const playbackVolume = s.playback_volume || 1.5;
-
-                document.getElementById('mode-synthwave_serenade-intensity-slider').value = intensity;
-                document.getElementById('mode-synthwave_serenade-intensity-value').textContent = intensity.toFixed(2);
-                document.getElementById('mode-synthwave_serenade-liveliness-slider').value = liveliness;
-                document.getElementById('mode-synthwave_serenade-liveliness-value').textContent = liveliness.toFixed(2);
-                document.getElementById('mode-synthwave_serenade-strain_threshold-slider').value = strainThreshold;
-                document.getElementById('mode-synthwave_serenade-strain_threshold-value').textContent = Math.round(strainThreshold);
-                document.getElementById('mode-synthwave_serenade-vocal_response-slider').value = vocalResponse;
-                document.getElementById('mode-synthwave_serenade-vocal_response-value').textContent = vocalResponse.toFixed(2);
-                document.getElementById('mode-synthwave_serenade-playback_volume-slider').value = playbackVolume;
-                document.getElementById('mode-synthwave_serenade-playback_volume-value').textContent = playbackVolume.toFixed(2);
-            }
         }
 
         // Update mode slider display and auto-apply

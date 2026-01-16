@@ -52,4 +52,4 @@ include-package-data = true
 where = ["."]
 
 [tool.setuptools.package-data]
-reachy_ultradancemix_9000 = ["**/*"]
+test2 = ["**", "static/*"]

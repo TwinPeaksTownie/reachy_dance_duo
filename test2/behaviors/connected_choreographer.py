@@ -498,6 +498,7 @@ class YouTubeDownloader:
             except UnicodeEncodeError:
                 error_msg = str(e).encode("utf-8", errors="replace").decode("utf-8")
             logger.error(f"[ConnectedChoreographer] Download error: {error_msg}")
+            self.log(f"Download Error: {error_msg}")
         return None
 
 

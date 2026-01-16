@@ -16,8 +16,8 @@ from typing import Any, AsyncGenerator, Optional, cast
 import numpy as np
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
-from fastapi.staticfiles import StaticFiles
+
+
 from pydantic import BaseModel
 
 from reachy_mini import ReachyMini
@@ -150,22 +150,6 @@ class ModeStartRequest(BaseModel):
     )
 
 
-# Static file path
-STATIC_DIR = Path(__file__).parent / "static"
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-
-
-# API Endpoints
-@app.get("/", response_model=None)
-async def root() -> FileResponse | HTMLResponse:
-    """Serve the config UI."""
-    index_path = STATIC_DIR / "index.html"
-    if index_path.exists():
-        return FileResponse(index_path)
-    else:
-        return HTMLResponse(
-            content="<h1>Reachy Dance Suite</h1><p>Static files not found.</p>"
-        )
 
 
 @app.get("/api/status")

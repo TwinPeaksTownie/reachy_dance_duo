@@ -430,13 +430,7 @@ class YouTubeDownloader:
             "windowsfilenames": True,  # Additional filename sanitization
             # Legacy compat options for better encoding handling
             "compat_opts": ["no-live-chat"],
-            "postprocessors": [
-                {
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": "mp3",
-                    "preferredquality": "192",
-                }
-            ],
+            "postprocessors": [],
             "postprocessor_args": {},
         }
 
@@ -473,15 +467,22 @@ class YouTubeDownloader:
 
                 ydl.download([download_target])
 
-                # yt-dlp with conversion enabled outputs mp3
-                audio_files = list(self.download_dir.glob(f"*[{video_id}]*.mp3"))
+                # yt-dlp might download various formats without conversion
+                # We search for any file containing the video ID
+                audio_files = list(self.download_dir.glob(f"*[{video_id}]*"))
+                audio_files = [
+                    f
+                    for f in audio_files
+                    if f.suffix in [".wav", ".mp3", ".webm", ".m4a", ".flac", ".opus"]
+                ]
+                
                 if not audio_files:
-                    # Fallback to any audio if specific ID match fails (rare)
+                     # Fallback to any recent audio file if specific ID match fails
                     audio_files = list(self.download_dir.glob("*"))
                     audio_files = [
                         f
                         for f in audio_files
-                        if f.suffix in [".wav", ".mp3", ".webm", ".m4a"]
+                        if f.suffix in [".wav", ".mp3", ".webm", ".m4a", ".flac", ".opus"]
                     ]
 
                 if audio_files:

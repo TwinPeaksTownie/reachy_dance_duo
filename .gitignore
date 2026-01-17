@@ -13,7 +13,12 @@ build/
 
 # Downloaded audio files
 downloads/
+debug_downloads/
 output/
+*.mp3
+*.webm
+*.wav
+*.m4a
 
 # IDE
 .vscode/

@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 
 [project]
-name = "test2"
-version = "1.0.4"
+name = "reachy-dance-duo"
+version = "1.0.5"
 description = "The ultimate dance app for Reachy Mini"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -42,7 +42,7 @@ disco_diva = [
 ]
 
 [project.entry-points."reachy_mini_apps"]
-test2 = "test2.main:Test2"
+reachy-dance-duo = "reachy_dance_duo.main:ReachyDanceDuo"
 
 [tool.setuptools]
 package-dir = { "" = "." }
@@ -52,4 +52,4 @@ include-package-data = true
 where = ["."]
 
 [tool.setuptools.package-data]
-test2 = ["**/*"]
+reachy_dance_duo = ["**/*"]

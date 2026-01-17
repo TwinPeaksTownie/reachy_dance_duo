@@ -22,8 +22,8 @@ from reachy_mini import ReachyMini, ReachyMiniApp
 from .app import app, initialize_with_robot, state
 
 
-class Test2(ReachyMiniApp):
-    """Ultra Dance Mix 9000 - Full dance suite for Reachy Mini.
+class ReachyDanceDuo(ReachyMiniApp):
+    """Reachy Dance Duo - Full dance suite for Reachy Mini.
 
     Features:
     - Live Groove: Dance to any music playing nearby using microphone input
@@ -34,7 +34,7 @@ class Test2(ReachyMiniApp):
     """
 
     # App icon emoji (shown in dashboard)
-    emoji: str = "🪩"
+    emoji: str = "🕺"
     # URL for the custom settings page (served by our FastAPI app)
     custom_app_url: str | None = "http://localhost:9000"
     # Prevent daemon from starting its own basic server - we handle it ourselves
@@ -52,7 +52,7 @@ class Test2(ReachyMiniApp):
         initialize_with_robot(reachy_mini)
 
         # Debug: Print registered routes
-        logger.info(f"[UltraDanceMix9000] Routes registered: {len(app.routes)}")
+        logger.info(f"[ReachyDanceDuo] Routes registered: {len(app.routes)}")
         for route in app.routes:
             if hasattr(route, "path") and hasattr(route, "methods"):
                 logger.info(f"  {route.methods} {route.path}")
@@ -61,7 +61,7 @@ class Test2(ReachyMiniApp):
         port = 9000
 
         logger.info(
-            f"[UltraDanceMix9000] App object id: {id(app)}, routes: {len(app.routes)}"
+            f"[ReachyDanceDuo] App object id: {id(app)}, routes: {len(app.routes)}"
         )
 
         # Create uvicorn config - use the app object directly
@@ -85,19 +85,19 @@ class Test2(ReachyMiniApp):
         server_thread = threading.Thread(target=server.run, daemon=True)
         server_thread.start()
 
-        logger.info(f"[UltraDanceMix9000] Started on http://0.0.0.0:{port}")
+        logger.info(f"[ReachyDanceDuo] Started on http://0.0.0.0:{port}")
 
         # Main loop - waiting for stop event
         while not stop_event.is_set():
             time.sleep(0.1)
 
         # Cleanup
-        logger.info(f"[UltraDanceMix9000] {time.strftime('%H:%M:%S')} Stopping...")
+        logger.info(f"[ReachyDanceDuo] {time.strftime('%H:%M:%S')} Stopping...")
 
         # Stop any running dance mode
         if state.current_mode and state.current_mode.running:
             logger.info(
-                f"[UltraDanceMix9000] {time.strftime('%H:%M:%S')} Stopping current mode: {state.current_mode.MODE_ID}"
+                f"[ReachyDanceDuo] {time.strftime('%H:%M:%S')} Stopping current mode: {state.current_mode.MODE_ID}"
             )
             # Run async stop in a new event loop
             loop = asyncio.new_event_loop()
@@ -105,7 +105,7 @@ class Test2(ReachyMiniApp):
             try:
                 loop.run_until_complete(state.current_mode.stop())
                 logger.info(
-                    f"[UltraDanceMix9000] {time.strftime('%H:%M:%S')} Mode stopped"
+                    f"[ReachyDanceDuo] {time.strftime('%H:%M:%S')} Mode stopped"
                 )
             finally:
                 loop.close()
@@ -113,21 +113,21 @@ class Test2(ReachyMiniApp):
         # Reset safety mixer
         if state.safety_mixer:
             logger.info(
-                f"[UltraDanceMix9000] {time.strftime('%H:%M:%S')} Resetting safety mixer"
+                f"[ReachyDanceDuo] {time.strftime('%H:%M:%S')} Resetting safety mixer"
             )
             state.safety_mixer.reset()
 
         # Signal server to shutdown
-        logger.info(f"[UltraDanceMix9000] {time.strftime('%H:%M:%S')} Stopping server")
+        logger.info(f"[ReachyDanceDuo] {time.strftime('%H:%M:%S')} Stopping server")
         server.should_exit = True
         server_thread.join(timeout=5.0)
         logger.info(
-            f"[UltraDanceMix9000] {time.strftime('%H:%M:%S')} Server stopped (joined: {not server_thread.is_alive()})"
+            f"[ReachyDanceDuo] {time.strftime('%H:%M:%S')} Server stopped (joined: {not server_thread.is_alive()})"
         )
 
-        logger.info(f"[UltraDanceMix9000] {time.strftime('%H:%M:%S')} Stopped")
+        logger.info(f"[ReachyDanceDuo] {time.strftime('%H:%M:%S')} Stopped")
 
 
 if __name__ == "__main__":
-    instance = Test2()
+    instance = ReachyDanceDuo()
     instance.wrapped_run()

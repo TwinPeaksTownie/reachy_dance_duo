@@ -504,17 +504,19 @@ class YouTubeDownloader:
 
 
 def load_audio_av(
-    file_path: str, target_sr: int = 11025
+    file_path: str, target_sr: int = 11025, layout: str = "mono"
 ) -> tuple[np.ndarray[Any, np.dtype[np.float32]], int]:
     """Load audio file using PyAV and resample to target_sr.
 
     Args:
         file_path: Path to audio file.
         target_sr: Target sample rate.
+        layout: "mono" or "stereo".
 
     Returns:
         Tuple of (audio_data, sample_rate).
-        audio_data is a 1D float32 numpy array (mono).
+        audio_data is a 1D float32 numpy array.
+        If stereo, it is interleaved [L, R, L, R].
 
     """
     try:
@@ -523,25 +525,23 @@ def load_audio_av(
 
         resampler = av.AudioResampler(
             format="flt",
-            layout="mono",
+            layout=layout,
             rate=target_sr,
         )
 
         frames = []
         for frame in container.decode(stream):
-            frame.pts = None  # Reset pts to avoid issues with non-monotonic pts
+            frame.pts = None
             frames.extend(resampler.resample(frame))
-
-        # Handle any remaining buffered frames
-        # (Though resampler.resample shouldn't have much buffer if any?)
 
         all_samples = []
         for frame in frames:
-            # We requested 'flt' (float32), mono
-            # PyAV frame.to_ndarray() returns (n_channels, n_samples)
-            # For mono, it's (1, n_samples)
             arr = frame.to_ndarray()
-            all_samples.append(arr[0])
+            if layout == "stereo":
+                # Interleave L and R (2, N) -> (N, 2) -> (2N,)
+                all_samples.append(arr.T.flatten())
+            else:
+                all_samples.append(arr[0])
 
         if not all_samples:
             return np.array([], dtype=np.float32), target_sr
@@ -735,6 +735,7 @@ class ConnectedChoreographer(DanceMode):
         self.audio_process: Optional[subprocess.Popen[Any]] = None
         self.prep_task: Optional[asyncio.Task[None]] = None
         
+        # Audio Playback Data (16k Stereo)
         self.audio_playback_data: Optional[np.ndarray[Any, np.dtype[np.float32]]] = None
 
         # Sequence state
@@ -883,38 +884,32 @@ class ConnectedChoreographer(DanceMode):
         self.prep_task = asyncio.create_task(self._prepare_and_start(download_url))
 
     def _audio_streaming_loop(self) -> None:
-        """Stream audio data to the robot in chunks."""
+        """Stream 16kHz Stereo audio data to the robot in chunks."""
         if self.audio_playback_data is None:
             return
             
-        logger.info(f"[{self.MODE_NAME}] Starting audio stream thread")
+        logger.info(f"[{self.MODE_NAME}] Starting audio stream thread (16kHz Stereo)")
         
-        # Audio settings
-        sr = 48000
+        sr = 16000
+        channels = 2
         chunk_time = 0.1  # 100ms
-        chunk_size = int(sr * chunk_time)
+        chunk_size = int(sr * chunk_time * channels) # 3200 samples
         total_samples = len(self.audio_playback_data)
         
         idx = 0
         
-        # Ensure media player is started
         try:
             self.mini.media.start_playing()
         except Exception as e:
             logger.error(f"[{self.MODE_NAME}] Failed to start media player: {e}")
             return
             
-        start_time = time.time()
-        
-        # Simple streaming loop
         while not self.stop_event.is_set() and idx < total_samples:
             iter_start = time.time()
             
-            # Extract chunk
             end = min(idx + chunk_size, total_samples)
             chunk = self.audio_playback_data[idx:end]
             
-            # Push to robot
             try:
                 self.mini.media.push_audio_sample(chunk)
             except Exception as e:
@@ -923,15 +918,14 @@ class ConnectedChoreographer(DanceMode):
                 
             idx = end
             
-            # Precision sleep to maintain timing
             elapsed = time.time() - iter_start
-            sleep_time = max(0.0, chunk_time - elapsed)
+            sleep_time = max(0.001, chunk_time - elapsed)
             time.sleep(sleep_time)
             
         logger.info(f"[{self.MODE_NAME}] Audio stream finished")
 
     def _start_audio_playback(self) -> None:
-        """Start audio playback using manual streaming to bypass SDK bug."""
+        """Start manual audio streaming thread."""
         if self.audio_playback_data is None:
             return
 
@@ -944,7 +938,6 @@ class ConnectedChoreographer(DanceMode):
             # 1. Download
             self._log("Retrieving audio from YouTube Music...")
 
-            # Run blocking download in executor
             loop = asyncio.get_running_loop()
             downloader = YouTubeDownloader(
                 self.config.download_dir, log_callback=self._log
@@ -963,33 +956,29 @@ class ConnectedChoreographer(DanceMode):
 
             self._log("Audio Received")
 
-            # 2. Load Audio for Playback (48kHz)
+            # 2. Load Audio for Playback (16kHz Stereo)
             self._log("Loading audio...")
             
-            # Load at 48kHz native for ReSpeaker
+            # Load at 16kHz Stereo to match reachymini_audio_sink
             self.audio_playback_data, _ = await loop.run_in_executor(
-                    None, lambda: load_audio_av(audio_path, target_sr=48000)
+                    None, lambda: load_audio_av(audio_path, target_sr=16000, layout="stereo")
             )
             
             if len(self.audio_playback_data) == 0:
-                 logger.error(f"[{self.MODE_NAME}] Low-level audio load failed")
+                 logger.error(f"[{self.MODE_NAME}] Audio load failed")
                  self._status["state"] = "error"
                  self.running = False
                  return
+            
+            # Normalize for maximum volume
+            max_val = np.max(np.abs(self.audio_playback_data))
+            if max_val > 0.001:
+                self.audio_playback_data = self.audio_playback_data / max_val
+                logger.info(f"[{self.MODE_NAME}] Normalized audio (scale factor: {1.0/max_val:.2f})")
 
-            # 3. Analyze (Downsample for speed)
+            # 3. Analyze
             self._status["state"] = "analyzing"
             self._log("Analyzing Beats...")
-            
-            # We can analyze the high-res data, but let's downsample for librosa speed
-            # Simple decimation (approximate)
-            analysis_sr = 12000 # 48000 / 4
-            analysis_audio = self.audio_playback_data[::4]
-            
-            # Create a dummy analysis object to reuse logic or modify Analyzer
-            # Actually, SongAnalyzer takes a path. We should modify it to take data or just save a temp small wav?
-            # Or just pass the path and let it load again (it's fast enough).
-            # Let's let Analyzer load from file separately to avoid refactoring Analyzer.
             
             analyzer = SongAnalyzer(log_callback=self._log)
             self.analysis = await loop.run_in_executor(
@@ -1075,6 +1064,10 @@ class ConnectedChoreographer(DanceMode):
         if self.dance_thread and self.dance_thread.is_alive():
             self.dance_thread.join(timeout=2.0)
         self.dance_thread = None
+        
+        if self.audio_thread and self.audio_thread.is_alive():
+            self.audio_thread.join(timeout=2.0)
+        self.audio_thread = None
         
         if self.audio_thread and self.audio_thread.is_alive():
             self.audio_thread.join(timeout=2.0)
@@ -1230,68 +1223,14 @@ class ConnectedChoreographer(DanceMode):
         self._start_audio_playback()
         self._dance_loop_local_audio(beat_times, sequence_assignments)
 
-    def _convert_to_wav(self, input_path: str) -> Optional[str]:
-        """Convert audio file to WAV using PyAV (decoding) and SoundFile (encoding).
+    def _start_audio_playback(self) -> None:
+        """Start manual audio streaming thread."""
+        if self.audio_playback_data is None:
+            return
 
-        Forces conversion to Mono 48kHz (standard for ReSpeaker) to ensure
-        compatibility and avoid channel mapping issues.
-        """
-        try:
-            import soundfile as sf
-            
-            # Use PyAV to decode source (handles webm, m4a, etc.)
-            container = av.open(input_path)
-            stream = container.streams.audio[0]
-            
-            # Force Mono 48kHz for reliability
-            resampler = av.AudioResampler(
-                format="fltp", # Float planar (easiest to handle as numpy)
-                layout="mono", 
-                rate=48000,
-            )
+        self.audio_thread = threading.Thread(target=self._audio_streaming_loop, daemon=True)
+        self.audio_thread.start()
 
-            all_samples = []
-            for frame in container.decode(stream):
-                frame.pts = None
-                for resampled in resampler.resample(frame):
-                    # Validated: fltp + mono returns shape (1, samples)
-                    arr = resampled.to_ndarray()
-                    if arr.shape[0] > 0:
-                        all_samples.append(arr[0]) # Get the single channel data
-                    
-            if not all_samples:
-                logger.error(f"[{self.MODE_NAME}] No audio samples decoded")
-                return None
-                
-            y = np.concatenate(all_samples)
-            
-            # Check for silence (if mean amplitude is near zero)
-            if np.mean(np.abs(y)) < 0.001:
-                logger.warning(f"[{self.MODE_NAME}] Warning: Converted audio seems silent")
-            
-            # Output filename
-            wav_path = str(Path(input_path).with_suffix(".wav"))
-            
-            # Write WAV (SoundFile handles 1D array as mono)
-            sf.write(wav_path, y, 48000)
-            
-            size_mb = os.path.getsize(wav_path) / (1024 * 1024)
-            logger.info(f"[{self.MODE_NAME}] Converted to WAV: {wav_path} ({size_mb:.2f} MB)")
-            self._log(f"Audio ready ({size_mb:.1f}MB)")
-            
-            # Delete original if different
-            if wav_path != input_path:
-                try:
-                   os.remove(input_path)
-                except OSError:
-                   pass
-                   
-            return wav_path
-            
-        except Exception as e:
-            logger.error(f"[{self.MODE_NAME}] WAV conversion failed: {e}")
-            self._log(f"Audio conversion failed: {e}")
-            return None
 
     def _dance_loop_local_audio(
         self,
@@ -1387,14 +1326,9 @@ class ConnectedChoreographer(DanceMode):
             time.sleep(0.02)
 
     def _start_audio_playback(self) -> None:
-        """Start audio playback using ReachyMini SDK."""
-        if not self.analysis:
+        """Play audio using manual streaming."""
+        if self.audio_playback_data is None:
             return
 
-        try:
-            # play_sound relies on soundfile which needs WAV usually
-            # We guaranteed WAV conversion in _prepare_and_start
-            self.mini.media.play_sound(self.analysis.audio_path)
-        except Exception as e:
-            logger.error(f"[{self.MODE_NAME}] Audio playback error: {e}")
-            self._log(f"Playback error: {e}")
+        self.audio_thread = threading.Thread(target=self._audio_streaming_loop, daemon=True)
+        self.audio_thread.start()

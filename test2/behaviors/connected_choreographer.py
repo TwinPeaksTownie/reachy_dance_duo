@@ -891,10 +891,12 @@ class ConnectedChoreographer(DanceMode):
         logger.info(f"[{self.MODE_NAME}] Starting audio stream thread (16kHz Stereo)")
         
         sr = 16000
-        channels = 2
         chunk_time = 0.1  # 100ms
-        chunk_size = int(sr * chunk_time * channels) # 3200 samples
-        total_samples = len(self.audio_playback_data)
+        
+        # Now using 2D array (frames, channels)
+        # 16000 frames/sec * 0.1s = 1600 frames per chunk
+        chunk_size_frames = int(sr * chunk_time)
+        total_frames = self.audio_playback_data.shape[0]
         
         idx = 0
         
@@ -904,10 +906,10 @@ class ConnectedChoreographer(DanceMode):
             logger.error(f"[{self.MODE_NAME}] Failed to start media player: {e}")
             return
             
-        while not self.stop_event.is_set() and idx < total_samples:
+        while not self.stop_event.is_set() and idx < total_frames:
             iter_start = time.time()
             
-            end = min(idx + chunk_size, total_samples)
+            end = min(idx + chunk_size_frames, total_frames)
             chunk = self.audio_playback_data[idx:end]
             
             try:
@@ -969,6 +971,14 @@ class ConnectedChoreographer(DanceMode):
                  self._status["state"] = "error"
                  self.running = False
                  return
+            
+            # Reshape to (N, 2) for clarity and SoundDevice compatibility
+            self.audio_playback_data = self.audio_playback_data.reshape(-1, 2)
+            n_frames = self.audio_playback_data.shape[0]
+            duration = n_frames / 16000
+            
+            logger.info(f"[{self.MODE_NAME}] Loaded audio: {n_frames} frames, {duration:.2f}s duration at 16000Hz Stereo")
+            self._log(f"Audio received: {duration:.1f}s")
             
             # Normalize for maximum volume
             max_val = np.max(np.abs(self.audio_playback_data))

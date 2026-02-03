@@ -12,7 +12,7 @@ export class MJCFLoader {
     constructor(manager) {
         this.manager = manager || THREE.DefaultLoadingManager;
         this.stlLoader = new STLLoader(this.manager);
-        this.meshPath = 'assets/'; // Default path for meshes
+        this.meshPath = 'assets/meshes_optimized/'; // Use optimized GLB meshes
     }
 
     load(url, onLoad, onProgress, onError) {

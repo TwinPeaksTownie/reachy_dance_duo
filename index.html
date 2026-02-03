@@ -1,2091 +1,569 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width" />
-	<title>Reachy's Ultra Dance Mix 9000 - Twin Beats</title>
-	<meta name="description"
-		content="Transform your Reachy Mini into a dancing machine with three unique modes: live music detection, system audio reactivity, and choreographed YouTube performances." />
-	<link rel="stylesheet" href="style.css" />
-	<script type="importmap">
-		{
-			"imports": {
-				"three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-				"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Reachy Dance Duo - Pollen Robotics</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+		rel="stylesheet">
+	<style>
+		:root {
+			--primary: #FF9900;
+			--primary-glow: rgba(255, 153, 0, 0.4);
+			--dark-bg: #0A0A0A;
+			--card-bg: #141414;
+			--text-main: #FFFFFF;
+			--text-dim: #A0A0A0;
+			--accent-blue: #00D1FF;
+		}
+
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		body {
+			font-family: 'Outfit', sans-serif;
+			background-color: var(--dark-bg);
+			color: var(--text-main);
+			line-height: 1.6;
+			overflow-x: hidden;
+		}
+
+		/* --- Hero Section & 3D Canvas --- */
+		.hero {
+			position: relative;
+			height: 80vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			text-align: center;
+			padding: 2rem;
+			overflow: hidden;
+		}
+
+		#visualizer-container {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			z-index: 0;
+			opacity: 0.6;
+		}
+
+		.hero-content {
+			max-width: 800px;
+			z-index: 1;
+			pointer-events: none;
+			/* Allow interaction with canvas below if needed */
+		}
+
+		.hero-emoji {
+			font-size: 4rem;
+			margin-bottom: 1rem;
+			display: block;
+			animation: bounce 2s infinite;
+		}
+
+		@keyframes bounce {
+
+			0%,
+			100% {
+				transform: translateY(0);
+			}
+
+			50% {
+				transform: translateY(-10px);
 			}
 		}
-	</script>
-	<style>
-		/* Calibration Panel */
-		.calibration-panel {
+
+		.hero h1 {
+			font-size: 4rem;
+			font-weight: 800;
+			margin-bottom: 1rem;
+			background: linear-gradient(90deg, #FFFFFF, var(--primary));
+			-webkit-background-clip: text;
+			background-clip: text;
+			-webkit-text-fill-color: transparent;
+			letter-spacing: -1px;
+		}
+
+		.hero p {
+			font-size: 1.5rem;
+			color: var(--text-dim);
+			margin-bottom: 2rem;
+			font-weight: 300;
+		}
+
+		.tags {
+			display: flex;
+			gap: 0.5rem;
+			justify-content: center;
+			flex-wrap: wrap;
+			margin-bottom: 2rem;
+		}
+
+		.tag {
+			background: rgba(255, 255, 255, 0.1);
+			padding: 0.4rem 1rem;
+			border-radius: 20px;
+			font-size: 0.8rem;
+			font-weight: 600;
+			color: var(--text-dim);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+		}
+
+		/* Overlay Controls for Demo */
+		#demo-controls {
 			position: absolute;
-			top: 60px;
-			right: 20px;
-			width: 300px;
-			background: rgba(0, 0, 0, 0.85);
-			border: 1px solid #444;
-			border-radius: 8px;
-			padding: 15px;
-			color: #eee;
-			font-family: monospace;
-			z-index: 2000;
-			box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-			display: none;
-			/* Hidden by default */
+			bottom: 20px;
+			left: 50%;
+			transform: translateX(-50%);
+			z-index: 10;
 			pointer-events: auto;
-			/* Allow interaction */
 		}
 
-		.calibration-panel.visible {
-			display: block;
-		}
-
-		.calibration-header {
-			font-size: 16px;
-			font-weight: bold;
-			margin-bottom: 10px;
-			color: #0088ff;
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-		}
-
-		.calibration-row {
-			margin-bottom: 12px;
-		}
-
-		.calibration-label {
-			display: block;
-			font-size: 12px;
-			color: #aaa;
-			margin-bottom: 4px;
-		}
-
-		.calibration-input-group {
-			display: flex;
-			align-items: center;
-			gap: 8px;
-		}
-
-		.calibration-slider {
-			flex-grow: 1;
-			cursor: pointer;
-		}
-
-		.calibration-value {
-			width: 60px;
-			background: #222;
-			border: 1px solid #555;
+		.audio-toggle-btn {
+			background: rgba(255, 153, 0, 0.2);
+			border: 1px solid var(--primary);
 			color: #fff;
-			font-size: 11px;
-			padding: 2px 4px;
-			text-align: right;
-		}
-
-		.calibration-btn {
-			width: 100%;
-			padding: 8px;
-			background: #0088ff;
-			color: white;
-			border: none;
-			border-radius: 4px;
+			padding: 10px 25px;
+			border-radius: 30px;
 			cursor: pointer;
-			font-weight: bold;
-			margin-top: 10px;
+			font-family: 'Outfit', sans-serif;
+			font-weight: 600;
+			transition: all 0.3s ease;
 		}
 
-		.calibration-btn:hover {
-			background: #0066cc;
+		.audio-toggle-btn:hover {
+			background: var(--primary);
+			color: black;
+			box-shadow: 0 0 20px var(--primary-glow);
 		}
 
-		.calibration-select {
-			width: 100%;
-			padding: 4px;
-			background: #222;
-			border: 1px solid #555;
-			color: white;
-			margin-bottom: 10px;
+		/* --- Technical Section --- */
+		.section {
+			padding: 6rem 2rem;
+			max-width: 1200px;
+			margin: 0 auto;
+			background: var(--dark-bg);
+			position: relative;
+			z-index: 5;
+		}
+
+		.section-title {
+			text-align: center;
+			font-size: 2.5rem;
+			margin-bottom: 4rem;
+			font-weight: 700;
+		}
+
+		.grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+			gap: 2rem;
+		}
+
+		.card {
+			background: var(--card-bg);
+			padding: 2.5rem;
+			border-radius: 24px;
+			border: 1px solid rgba(255, 255, 255, 0.05);
+			transition: transform 0.3s ease, border-color 0.3s ease;
+		}
+
+		.card:hover {
+			transform: translateY(-5px);
+			border-color: var(--primary);
+		}
+
+		.step-num {
+			width: 40px;
+			height: 40px;
+			background: var(--primary);
+			color: black;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-weight: 800;
+			margin-bottom: 1.5rem;
+		}
+
+		.card h3 {
+			margin-bottom: 1rem;
+			font-size: 1.5rem;
+		}
+
+		.card p {
+			color: var(--text-dim);
+			font-size: 1rem;
+		}
+
+		/* --- Footer --- */
+		footer {
+			padding: 4rem 2rem;
+			border-top: 1px solid rgba(255, 255, 255, 0.05);
+			text-align: center;
+			color: var(--text-dim);
+			background: var(--dark-bg);
+			position: relative;
+			z-index: 5;
+		}
+
+		.footer-links {
+			display: flex;
+			gap: 2rem;
+			justify-content: center;
+			margin-bottom: 2rem;
+		}
+
+		.footer-links a {
+			color: var(--text-main);
+			text-decoration: none;
+			font-weight: 600;
+			transition: color 0.2s;
+		}
+
+		.footer-links a:hover {
+			color: var(--primary);
+		}
+
+		@media (max-width: 768px) {
+			.hero h1 {
+				font-size: 2.5rem;
+			}
+
+			.hero p {
+				font-size: 1.1rem;
+			}
 		}
 	</style>
 </head>
 
 <body>
-	<!-- 3D Canvas Background -->
-	<canvas id="audioCanvas"></canvas>
 
-	<!-- UI Overlay -->
-	<div id="ui-overlay">
-		<!-- Calibration Panel -->
-		<div id="calibrationPanel" class="calibration-panel">
-			<div class="calibration-header">
-				<span>HEAD CALIBRATION</span>
-				<button id="toggleCalib" style="background:none; border:none; color:#666; cursor:pointer;">X</button>
+	<section class="hero">
+		<div id="visualizer-container"></div>
+		<div class="hero-content">
+			<span class="hero-emoji">🕺</span>
+			<h1>Reachy Dance Duo</h1>
+			<div class="tags">
+				<span class="tag">ROBOTICS</span>
+				<span class="tag">COMPUTER VISION</span>
+				<span class="tag">AUDIO ANALYSIS</span>
+				<span class="tag">DANCE</span>
 			</div>
-
-			<div class="calibration-row">
-				<select id="robotSelect" class="calibration-select">
-					<option value="left">Left Robot</option>
-					<option value="right">Right Robot</option>
-				</select>
-			</div>
-
-			<!-- Pivot Offset Correction (Local Child Position) -->
-			<div class="calibration-row"
-				style="background: #2a2a2a; padding: 5px; border-radius: 4px; border: 1px solid #444; margin-bottom: 10px;">
-				<div style="font-size: 0.8em; color: #aaa; margin-bottom: 4px;">PIVOT OFFSET (Center Rotation)</div>
-
-				<div class="calibration-row">
-					<span class="calibration-label" style="width: 20px;">X</span>
-					<div class="calibration-input-group">
-						<input type="range" id="pivX" class="calibration-slider" min="-0.1" max="0.1" step="0.0001">
-						<input type="number" id="valPivX" class="calibration-value" step="0.0001">
-					</div>
-				</div>
-				<div class="calibration-row">
-					<span class="calibration-label" style="width: 20px;">Y</span>
-					<div class="calibration-input-group">
-						<input type="range" id="pivY" class="calibration-slider" min="-0.1" max="0.1" step="0.0001">
-						<input type="number" id="valPivY" class="calibration-value" step="0.0001">
-					</div>
-				</div>
-				<div class="calibration-row">
-					<span class="calibration-label" style="width: 20px;">Z</span>
-					<div class="calibration-input-group">
-						<input type="range" id="pivZ" class="calibration-slider" min="-0.1" max="0.1" step="0.0001">
-						<input type="number" id="valPivZ" class="calibration-value" step="0.0001">
-					</div>
-				</div>
-			</div>
-
-			<!-- Position Controls -->
-			<div class="calibration-row">
-				<span class="calibration-label">Position X (Right/Left)</span>
-				<div class="calibration-input-group">
-					<input type="range" id="posX" class="calibration-slider" min="-0.5" max="0.5" step="0.001">
-					<input type="number" id="valPosX" class="calibration-value" step="0.001">
-				</div>
-			</div>
-
-			<div class="calibration-row">
-				<span class="calibration-label">Position Y (Up/Down)</span>
-				<div class="calibration-input-group">
-					<input type="range" id="posY" class="calibration-slider" min="-0.5" max="0.5" step="0.001">
-					<input type="number" id="valPosY" class="calibration-value" step="0.001">
-				</div>
-			</div>
-
-			<div class="calibration-row">
-				<span class="calibration-label">Position Z (Fwd/Back)</span>
-				<div class="calibration-input-group">
-					<input type="range" id="posZ" class="calibration-slider" min="-0.5" max="0.5" step="0.001">
-					<input type="number" id="valPosZ" class="calibration-value" step="0.001">
-				</div>
-			</div>
-
-			<hr style="border: 0; border-top: 1px solid #444; margin: 10px 0;">
-
-			<!-- Rotation Controls -->
-			<div class="calibration-row">
-				<span class="calibration-label">Rotation X (Pitch/Nod)</span>
-				<div class="calibration-input-group">
-					<input type="range" id="rotX" class="calibration-slider" min="-180" max="180" step="1">
-					<input type="number" id="valRotX" class="calibration-value" step="1">
-				</div>
-			</div>
-
-			<div class="calibration-row">
-				<span class="calibration-label">Rotation Y (Yaw/Turn)</span>
-				<div class="calibration-input-group">
-					<input type="range" id="rotY" class="calibration-slider" min="-180" max="180" step="1">
-					<input type="number" id="valRotY" class="calibration-value" step="1">
-				</div>
-			</div>
-
-			<div class="calibration-row">
-				<span class="calibration-label">Rotation Z (Roll/Tilt)</span>
-				<div class="calibration-input-group">
-					<input type="range" id="rotZ" class="calibration-slider" min="-180" max="180" step="1">
-					<input type="number" id="valRotZ" class="calibration-value" step="1">
-				</div>
-			</div>
-
-			<hr style="border: 0; border-top: 1px solid #444; margin: 10px 0;">
-
-			<!-- Mechanical Debugging Controls -->
-			<div class="calibration-row">
-				<span class="calibration-label" style="color: #4CAF50;">Motor Bias (Deg)</span>
-				<div class="calibration-input-group">
-					<input type="range" id="motorBiasSlider" class="calibration-slider" min="0" max="180" step="1"
-						value="90">
-					<input type="number" id="valMotorBias" class="calibration-value" step="1" value="90">
-				</div>
-			</div>
-
-			<div class="calibration-row">
-				<button id="toggleMotion" class="calibration-btn" style="background: #e91e63; margin-bottom: 5px;">PAUSE
-					MOTION</button>
-			</div>
-
-			<div class="calibration-row">
-				<button id="resetNeutral" class="calibration-btn" style="background: #607d8b; margin-bottom: 5px;">RESET
-					TO NEUTRAL</button>
-			</div>
-
-			<button id="saveConfigBtn" class="calibration-btn">COPY CONFIG TO CLIPBOARD</button>
+			<p>Turn any song into a synchronized dance party with Reachy Mini. Watch the twin visualizer react live to
+				the music.</p>
 		</div>
-		<div class="top-bar">
-			<div class="title-container">
-				<div class="subtitle">REACHY DANCE DUO</div>
-				<h1>TWIN BEATS</h1>
-			</div>
-			<div class="audio-controls">
-				<button id="toggleAudio" class="audio-toggle-btn">
-					<span class="btn-icon">⏳</span>
-					Loading...
-				</button>
-			</div>
-		</div>
-		<div class="controls">
-			<div class="control-hint">Drag to rotate • Scroll to zoom</div>
-			<button id="saveCameraBtn" class="save-camera-btn">
-				📷 Save Camera Position
+
+		<div id="demo-controls">
+			<button id="toggleAudio" class="audio-toggle-btn">
+				🔊 Start Demo Audio
 			</button>
 		</div>
-	</div>
+	</section>
 
-	<!-- Installation Script -->
-	<script>
-		// Get the current Hugging Face Space URL as the repository URL
-		function getCurrentSpaceUrl() {
-			const currentUrl = window.location.href;
-			const cleanUrl = currentUrl.split('?')[0].replace(/\/$/, '');
-			return cleanUrl;
-		}
+	<section class="section">
+		<h2 class="section-title">How it Works</h2>
+		<div class="grid">
+			<div class="card">
+				<div class="step-num">1</div>
+				<h3>Connect</h3>
+				<p>Launch the app from your Reachy Mini dashboard. The 3D visualizer will automatically link to your
+					robot's sensors.</p>
+			</div>
+			<div class="card">
+				<div class="step-num">2</div>
+				<h3>Pick a Mode</h3>
+				<p>Choose <strong>Live Groove</strong> to dance to ambient sounds via microphone, or <strong>Beat
+						Bandit</strong> to choreograph to YouTube tracks.</p>
+			</div>
+			<div class="card">
+				<div class="step-num">3</div>
+				<h3>Customize</h3>
+				<p>Adjust intensity, amplitude, and safety parameters in real-time. Watch the robots react in the
+					visualizer before they move in physical space.</p>
+			</div>
+			<div class="card">
+				<div class="step-num">4</div>
+				<h3>Dance!</h3>
+				<p>Hit start and watch Reachy Mini perform. The dual-robot kinematics ensure smooth, expressive
+					movements synced to every beat.</p>
+			</div>
+		</div>
+	</section>
 
-		// Parse TOML content to extract project name
-		function parseTomlProjectName(tomlContent) {
-			try {
-				const lines = tomlContent.split('\n');
-				let inProjectSection = false;
+	<footer>
+		<div class="footer-links">
+			<a href="https://pollen-robotics.com">Pollen Robotics</a>
+			<a href="https://github.com/pollen-robotics/reachy-mini">GitHub</a>
+			<a href="https://huggingface.co/pollen-robotics">HF App Store</a>
+		</div>
+		<p>&copy; 2026 Pollen Robotics. Built for Reachy Mini.</p>
+	</footer>
 
-				for (const line of lines) {
-					const trimmedLine = line.trim();
+	<audio id="dance-audio" src="dance_duo.wav" crossorigin="anonymous" loop></audio>
 
-					if (trimmedLine === '[project]') {
-						inProjectSection = true;
-						continue;
-					}
+	<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
 
-					if (trimmedLine.startsWith('[') && trimmedLine !== '[project]') {
-						inProjectSection = false;
-						continue;
-					}
-
-					if (inProjectSection && trimmedLine.startsWith('name')) {
-						const match = trimmedLine.match(/name\s*=\s*["']([^"']+)["']/);
-						if (match) {
-							return match[1].toLowerCase().replace(/[^a-z0-9-_]/g, '-');
-						}
-					}
-				}
-
-				throw new Error('Project name not found in pyproject.toml');
-			} catch (error) {
-				console.error('Error parsing pyproject.toml:', error);
-				return 'reachy-ultradancemix-9000';
-			}
-		}
-
-		// Fetch and parse pyproject.toml from the current space
-		async function getAppNameFromCurrentSpace() {
-			try {
-				const response = await fetch('./pyproject.toml');
-				if (!response.ok) {
-					throw new Error(`Failed to fetch pyproject.toml: ${response.status}`);
-				}
-				const tomlContent = await response.text();
-				return parseTomlProjectName(tomlContent);
-			} catch (error) {
-				console.error('Error fetching app name from current space:', error);
-				const url = getCurrentSpaceUrl();
-				const parts = url.split('/');
-				const spaceName = parts[parts.length - 1];
-				return spaceName.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
-			}
-		}
-
-		// Install to Reachy
-		async function installToReachy() {
-			const dashboardUrl = document.getElementById('dashboardUrl').value.trim();
-			const statusDiv = document.getElementById('installStatus');
-			const installBtn = document.getElementById('installBtn');
-
-			if (!dashboardUrl) {
-				showStatus('error', 'Please enter your Reachy dashboard URL');
-				return;
-			}
-
-			try {
-				installBtn.disabled = true;
-				installBtn.innerHTML = '<span class="btn-icon">⏳</span>Installing...';
-
-				showStatus('loading', 'Connecting to your Reachy dashboard...');
-
-				// Test connection
-				const testResponse = await fetch(`${dashboardUrl}/api/status`, {
-					method: 'GET',
-					mode: 'cors',
-				});
-
-				if (!testResponse.ok) {
-					throw new Error('Cannot connect to dashboard. Make sure the URL is correct and the dashboard is running.');
-				}
-
-				showStatus('loading', 'Reading app configuration...');
-
-				// Get app name from pyproject.toml
-				const appName = await getAppNameFromCurrentSpace();
-
-				// Get current space URL as repository URL
-				const repoUrl = getCurrentSpaceUrl();
-
-				showStatus('loading', `Starting installation of "${appName}"...`);
-
-				// Start installation
-				const installResponse = await fetch(`${dashboardUrl}/api/install`, {
-					method: 'POST',
-					mode: 'cors',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify({
-						url: repoUrl,
-						name: appName
-					})
-				});
-
-				const result = await installResponse.json();
-
-				if (installResponse.ok) {
-					showStatus('success', `✅ Installation started for "${appName}"! Check your dashboard for progress.`);
-					setTimeout(() => {
-						showStatus('info', `Open your dashboard at ${dashboardUrl} to see the installed app.`);
-					}, 3000);
-				} else {
-					throw new Error(result.detail || 'Installation failed');
-				}
-			} catch (error) {
-				console.error('Installation error:', error);
-				showStatus('error', `❌ ${error.message}`);
-			} finally {
-				installBtn.disabled = false;
-				installBtn.innerHTML = '<span class="btn-icon">📥</span>Install Ultra Dance Mix 9000';
-			}
-		}
-
-		// Show status message
-		function showStatus(type, message) {
-			const statusDiv = document.getElementById('installStatus');
-			statusDiv.className = `install-status ${type}`;
-			statusDiv.textContent = message;
-			statusDiv.style.display = 'block';
-		}
-
-		// Initialize on page load
-		// Dead code removed
-
-	</script>
-
-	<!-- Three.js Audio Visualization -->
 	<script type="module">
 		import * as THREE from 'three';
 		import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-		import { STLLoader } from 'three/addons/loaders/STLLoader.js';
-		import { calculateActiveMotorAngles, calculatePassiveJoints, buildHeadPoseMatrix } from './Kinematics.js';
 
-		// Global Variables
-		let leftRobot, rightRobot;
-		let danceData, preAnalyzedData;
-		let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-		let analyser, bassAnalyser, midAnalyser, highAnalyser;
-		let dataArray, bassData, midData, highData;
-		let audioElement;
-		let isPlaying = false;
-		let isAudioMuted = true;
-		let audioStarted = false;
-		let visualizationStartTime = 0;
+		// Post-Processing
+		import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+		import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+		import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+		import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
-		// --- MJCF (MuJoCo XML) Parser & Loader ---
-		class MJCFLoader {
-			constructor(manager) {
-				this.manager = manager || THREE.DefaultLoadingManager;
-				this.stlLoader = new STLLoader(this.manager);
-				this.meshPath = 'assets/'; // Default path for meshes
-			}
+		// Custom Modules
+		import { ReachyRobot } from './js/ReachyRobot.js';
+		import { MusicNoteSystem, SVG3DSystem, getRainbowColor } from './js/Visualizer.js';
 
-			load(url, onLoad, onProgress, onError) {
-				const loader = new THREE.FileLoader(this.manager);
-				loader.setPath(this.path);
-				loader.load(url, async (text) => {
-					try {
-						// 1. Parse XML and build structure
-						const { group, promises } = this.parse(text);
-
-						// 2. Wait for all meshes to load
-						if (promises.length > 0) {
-							await Promise.all(promises);
-						}
-
-						onLoad(group);
-
-					} catch (e) {
-						if (onError) onError(e);
-					}
-				}, onProgress, onError);
-			}
-
-			parse(text) {
-				const parser = new DOMParser();
-				const xmlDoc = parser.parseFromString(text, 'text/xml');
-				const mujoco = xmlDoc.getElementsByTagName('mujoco')[0];
-
-				const robotGroup = new THREE.Group();
-				robotGroup.name = 'reachy_mini';
-				const promises = [];
-
-				// 1. Parse Assets (Mesh Name -> File Path Map)
-				this.meshes = {};
-				const assets = mujoco.getElementsByTagName('asset')[0];
-				if (assets) {
-					const meshes = assets.getElementsByTagName('mesh');
-					for (const m of meshes) {
-						const file = m.getAttribute('file');
-						let name = m.getAttribute('name');
-
-						if (!name && file) {
-							const parts = file.split('/');
-							const filename = parts[parts.length - 1];
-							name = filename.replace(/\.[^/.]+$/, "");
-						}
-
-						if (name && file) {
-							this.meshes[name] = file;
-						}
-					}
-				}
-
-				// 2. Parse Worldbody
-				const worldbody = mujoco.getElementsByTagName('worldbody')[0];
-				if (worldbody) {
-					this.parseBodyChildren(worldbody, robotGroup, promises);
-				}
-
-				return { group: robotGroup, promises: promises };
-			}
-
-			parseBodyChildren(xmlNode, parent3D, promises) {
-				const children = Array.from(xmlNode.children);
-
-				for (const child of children) {
-					const tagName = child.tagName.toLowerCase();
-
-					if (tagName === 'body') {
-						const bodyGroup = new THREE.Group();
-						bodyGroup.name = child.getAttribute('name') || '';
-
-						// Position
-						if (child.hasAttribute('pos')) {
-							const pos = child.getAttribute('pos').trim().split(/\s+/).map(Number);
-							bodyGroup.position.set(pos[0], pos[1], pos[2]);
-						}
-
-						// Quaternion (MJCF: w x y z -> Three.js: x y z w)
-						if (child.hasAttribute('quat')) {
-							const quat = child.getAttribute('quat').trim().split(/\s+/).map(Number);
-							bodyGroup.quaternion.set(quat[1], quat[2], quat[3], quat[0]);
-						}
-
-						parent3D.add(bodyGroup);
-						this.parseBodyChildren(child, bodyGroup, promises);
-					}
-					else if (tagName === 'geom') {
-						const type = child.getAttribute('type');
-						const classAttr = child.getAttribute('class');
-
-						// SKIP COLLISION MESHES
-						if (classAttr === 'collision' || child.getAttribute('group') === '3') {
-							continue;
-						}
-
-						if (type === 'mesh') {
-							const meshName = child.getAttribute('mesh');
-							if (meshName) {
-								// TRIGGER LOAD
-								const p = this.loadGeomMesh(meshName, parent3D, child);
-								promises.push(p);
-							}
-						}
-					}
-					else if (tagName === 'site') {
-						// SITE PARSING for Connection Points
-						const siteGroup = new THREE.Group();
-						siteGroup.name = child.getAttribute('name') || '';
-						siteGroup.userData.type = 'site';
-
-						// Position
-						if (child.hasAttribute('pos')) {
-							const pos = child.getAttribute('pos').trim().split(/\s+/).map(Number);
-							siteGroup.position.set(pos[0], pos[1], pos[2]);
-						}
-
-						// Quaternion
-						if (child.hasAttribute('quat')) {
-							const quat = child.getAttribute('quat').trim().split(/\s+/).map(Number);
-							siteGroup.quaternion.set(quat[1], quat[2], quat[3], quat[0]);
-						}
-
-						parent3D.add(siteGroup);
-					}
-				}
-			}
-
-			loadGeomMesh(meshName, parent3D, geomNode) {
-				return new Promise((resolve) => {
-					// Resolve filename from assets map
-					let filename = this.meshes[meshName];
-					if (!filename) filename = meshName + ".stl";
-
-					const url = `${this.meshPath}${filename}`;
-
-					this.stlLoader.load(url,
-						(geometry) => {
-							// HEURISTIC MATERIAL MAPPING
-							// Default to Glossy White for Body
-							let color = 0xffffff;
-							let emissive = 0x333333;
-							let roughness = 0.1; // GLOSSY
-							let metalness = 0.0; // PLASTIC
-
-							const matName = geomNode.getAttribute('material') || '';
-							const meshNameLower = meshName.toLowerCase();
-							const matNameLower = matName.toLowerCase();
-
-							// IDENTIFY DARK PARTS (Base, Tech, Camera, Caps)
-							const isDark =
-								matNameLower.includes('black') ||
-								matNameLower.includes('dark') ||
-								matNameLower.includes('antenna_material') ||
-								matNameLower.includes('cap') ||
-								matNameLower.includes('speaker') ||
-								meshNameLower.includes('arducam') ||  // Camera
-								meshNameLower.includes('foot') ||     // Base/Foot
-								meshNameLower.includes('bearing');    // Mechanical bits
-
-							// IDENTIFY GREY/SILVER PARTS (Actuators, rods)
-							const isSilver =
-								meshNameLower.includes('stewart') ||
-								meshNameLower.includes('rod') ||
-								meshNameLower.includes('link') ||
-								meshNameLower.includes('arm');
-
-							// IDENTIFY GLOWING PARTS (Antennae/Horns)
-							// Strict match for 'antenna' mesh to avoid coloring 'antenna_body' or 'antenna_holder'
-							const isAntenna = meshNameLower.includes('horn') || meshNameLower === 'antenna';
-
-							// IDENTIFY REFLECTIVE PARTS (Eyes/Lens)
-							// "Lens" matches 'lens_cap' too, so we must separate distinct glass from plastic caps.
-							const isGlass = meshNameLower.includes('lens') && !meshNameLower.includes('cap');
-
-							// IDENTIFY MATTE HOLDERS (Caps, ArduCam, Carter, Glasses Holder)
-							const isHolder =
-								meshNameLower.includes('cap') ||
-								meshNameLower.includes('carter') ||
-								meshNameLower.includes('arducam') ||
-								meshNameLower.includes('glasses');
-
-							if (isDark) {
-								color = 0x111111;
-								emissive = 0x000000;
-								roughness = 0.8; // Matte
-								metalness = 0.1;
-							}
-							else if (isSilver) {
-								color = 0xaaaaaa; // Light Grey for Silver
-								emissive = 0x111111;
-								roughness = 0.2; // Shiny
-								metalness = 1.0; // Metallic
-							}
-							else if (matNameLower.includes('blue')) {
-								color = 0x0088ff;
-								emissive = 0x002266;
-							}
-
-							// OVERRIDES
-							if (isAntenna) {
-								// Explicit Override: Force Black Base + Faint White Glow
-								// This matches original hardware (Black) but adds glow for visibility against darkness.
-								color = 0x111111; // Black Base
-								emissive = 0xffffff;
-								roughness = 0.6; // Matte
-								metalness = 0.1;
-							}
-
-							if (isGlass) {
-								// Really Reflective Lenses (Big/Small/Fisheye)
-								// DIELECTRIC BLACK creates sharp white highlights on black body
-								color = 0x000000;
-								emissive = 0x000000;
-								roughness = 0.0; // Perfect Mirror Sharpness
-								metalness = 0.0; // Plastic/Glass (Not Metal)
-							}
-
-							if (isHolder) {
-								// Matte Textured Plastic (Caps, Camera Holder)
-								color = 0x111111; // Dark Grey/Black
-								emissive = 0x000000;
-								roughness = 0.9; // Very Matte (Textured look)
-								metalness = 0.1; // Plastic
-							}
-
-							const material = new THREE.MeshStandardMaterial({
-								color: color,
-								roughness: roughness,
-								metalness: metalness,
-								emissive: emissive,
-								emissiveIntensity: (isAntenna) ? 0.01 : ((isDark) ? 0.0 : ((isSilver) ? 0.2 : 0.3))
-							});
-
-
-							const mesh = new THREE.Mesh(geometry, material);
-
-							if (geomNode.hasAttribute('pos')) {
-								const pos = geomNode.getAttribute('pos').trim().split(/\s+/).map(Number);
-								mesh.position.set(pos[0], pos[1], pos[2]);
-							}
-							if (geomNode.hasAttribute('quat')) {
-								const quat = geomNode.getAttribute('quat').trim().split(/\s+/).map(Number);
-								mesh.quaternion.set(quat[1], quat[2], quat[3], quat[0]);
-							}
-
-							parent3D.add(mesh);
-							resolve();
-						},
-						undefined,
-						(err) => {
-							console.warn(`Could not load mesh: ${url}`, err);
-							resolve();
-						}
-					);
-				});
-			}
-		}
-
-		// Scene setup
-		const canvas = document.getElementById('audioCanvas');
+		// --- SCENE SETUP ---
+		const container = document.getElementById('visualizer-container');
 		const scene = new THREE.Scene();
-		scene.background = new THREE.Color(0x000000);
+		const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+		camera.position.set(0, 1.5, 4);
 
-		// STUDIO LIGHTING SETUP
-		// 1. Ambient Light (Base visibility)
-		const ambientLight = new THREE.AmbientLight(0x404040, 2.0); // Soft white light
+		const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+		renderer.setSize(window.innerWidth, window.innerHeight);
+		renderer.setPixelRatio(window.devicePixelRatio);
+		renderer.setClearColor(0x000000, 1);
+		renderer.toneMapping = THREE.ReinhardToneMapping;
+		container.appendChild(renderer.domElement);
+
+		// --- POST PROCESSING ---
+		const renderScene = new RenderPass(scene, camera);
+		const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+		bloomPass.threshold = 1.1;
+		bloomPass.strength = 1.5;
+		bloomPass.radius = 0.8;
+		const outputPass = new OutputPass();
+
+		const composer = new EffectComposer(renderer);
+		composer.addPass(renderScene);
+		composer.addPass(bloomPass);
+		composer.addPass(outputPass);
+
+		const controls = new OrbitControls(camera, renderer.domElement);
+		controls.target.set(0, 1, 0);
+		controls.update();
+
+		// --- LIGHTING ---
+		const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
 		scene.add(ambientLight);
-
-		// 2. Key Light (Main Source - Top Right Front) - Creates sharp reflections on eyes
 		const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
 		keyLight.position.set(5, 10, 7);
 		scene.add(keyLight);
-
-		// 3. Fill Light (Softens shadows - Top Left Front)
 		const fillLight = new THREE.DirectionalLight(0xeef2f3, 1.0);
 		fillLight.position.set(-5, 5, 5);
 		scene.add(fillLight);
 
-		// 4. Rim Light (Backlight - Behind) - Separates black parts from black bg
-		const rimLight = new THREE.PointLight(0xffffff, 2.0);
-		rimLight.position.set(0, 10, -10);
-		scene.add(rimLight);
-
-		// 5. Front Light (Viewer's Perspective) - Direct eye reflection
-		const frontLight = new THREE.PointLight(0xffffff, 1.5, 100);
-		frontLight.position.set(0, 0, 30);
-		scene.add(frontLight);
-
-		// 6. Ring Light Array (Simulates Studio Ring Light for Reflections)
-		const ringRadius = 5;
-		const ringZ = 25; // Slightly closer than front light
-		const ringCount = 6;
-		for (let i = 0; i < ringCount; i++) {
-			const angle = (i / ringCount) * Math.PI * 2;
-			const x = Math.cos(angle) * ringRadius;
-			const y = Math.sin(angle) * ringRadius;
-			const ringLight = new THREE.PointLight(0xffffff, 0.8, 100); // Softer than main key
-			ringLight.position.set(x, y, ringZ);
-			scene.add(ringLight);
-		}
-
-		// Camera - positioned for optimal view of the deep loop
-		const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1500);
-		camera.position.set(0.58, -2.01, 39.19);
-		camera.up.set(0, 1, 0);
-		camera.lookAt(0.22, 1.84, 0.19);
-
-		// Renderer
-		const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-		renderer.setSize(window.innerWidth, window.innerHeight);
-		renderer.setPixelRatio(window.devicePixelRatio);
-
-		// Orbit controls
-		const controls = new OrbitControls(camera, canvas);
-		controls.enableDamping = true;
-		controls.dampingFactor = 0.05;
-		controls.autoRotate = false;
-		controls.target.set(0.22, 1.84, 0.19);
-		controls.update();
-
-		// Load Reachy Mini Robots
-		const mjcfLoader = new MJCFLoader();
-		console.log('🚀 Starting Model Load...');
-
-		mjcfLoader.load('reachy_mini.xml', (robotGroup) => {
-			console.log('🤖 Reachy Mini Model FULLY INSTANTIATED!');
-
-			// Rotate to upright (Z-up -> Y-up)
-			robotGroup.rotation.x = -Math.PI / 2;
-
-			// Left Robot
-			leftRobot = robotGroup.clone();
-			leftRobot.position.set(-10, -5, 25);  // Adjusted to -5 (was -20, too low)
-			leftRobot.rotation.x = -Math.PI / 2; // Z-up fix
-			leftRobot.rotation.z = -Math.PI / 6; // Yaw
-			leftRobot.scale.set(20, 20, 20);
-			leftRobot.userData.name = 'Left';
-			scene.add(leftRobot);
-
-			// Right Robot
-			rightRobot = robotGroup.clone();
-			rightRobot.position.set(10, -5, 25);  // Adjusted to -5 (was -20, too low)
-			rightRobot.rotation.x = -Math.PI / 2; // Z-up fix
-			rightRobot.rotation.z = Math.PI / 6 + Math.PI; // Yaw + 180
-			rightRobot.scale.set(20, 20, 20);
-			rightRobot.userData.name = 'Right';
-			scene.add(rightRobot);
-
-			// Robot-specific lighting - BRIGHTER
-			const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 3.0);  // Increased from 1.5
-			scene.add(hemiLight);
-
-			const spotLeft = new THREE.SpotLight(0xffffff, 80);  // Increased from 30
-			spotLeft.position.set(-5, 10, 50);
-			spotLeft.angle = Math.PI / 6;
-			spotLeft.penumbra = 0.5;
-			spotLeft.target = leftRobot;
-			scene.add(spotLeft);
-
-			const spotRight = new THREE.SpotLight(0xffffff, 80);  // Increased from 30
-			spotRight.position.set(5, 10, 50);
-			spotRight.angle = Math.PI / 6;
-			spotRight.penumbra = 0.5;
-			spotRight.target = rightRobot;
-			scene.add(spotRight);
-
-			// Initialize head position - set to fixed offset from robot base
-			// Initialize head position - Reparented to Robot Root
-			initializeHead(leftRobot, 'Left');
-			initializeHead(rightRobot, 'Right');
-
-			console.log('✅ Robots added to scene with heads initialized');
-
-		}, undefined, (err) => {
-			console.error('Failed to load Reachy Mini:', err);
-		});
-
-		// Animation: Update Rod Orientations
-		function updateRods(robot) {
-			if (!robot || !robot.userData.rods) return;
-
-			// CRITICAL: Force matrix update before calculating world positions
-			robot.updateMatrixWorld(true);
-
-			// Get uniform world scale (robot is scaled by 20x)
-			const worldScale = new THREE.Vector3();
-			robot.getWorldScale(worldScale);
-			const s = worldScale.y; // proxy for scale
-
-			const targetPos = new THREE.Vector3();
-			const pivotPos = new THREE.Vector3();
-			const baseLength = 0.085;
-
-			robot.userData.rods.forEach(rod => {
-				// 1. Get World Positions of CONNECTION POINTS
-				// Target: Ball Joint on Motor Horn
-				if (rod.ballJoint) {
-					rod.ballJoint.getWorldPosition(targetPos);
-				} else {
-					rod.motorBody.getWorldPosition(targetPos);
-				}
-				// Pivot: Ball Joint on Head (Container Origin)
-				rod.container.getWorldPosition(pivotPos);
-
-				// 2. Rigid Aiming (No Scaling)
-				rod.container.lookAt(targetPos);
-
-				// 3. Apply Axis Correction
-				// Point the rod towards the target.
-				// By default, LookAt points -Z axis. We need to align the rod's length axis.
-				rod.container.rotateY(rod.lookAtOffset);
-
-				// 4. Force Scale to 1.0 (Rigid)
-				if (rod.mesh) {
-					rod.mesh.scale.set(1, 1, 1);
-				}
-			});
-			robot.userData.debugged = true;
-		}
-
-		function initializeHead(robot, name) {
-			const head = robot.getObjectByName('xl_330');
-			if (head) {
-				// 1. Create Pivot Group
-				const pivotGroup = new THREE.Group();
-				pivotGroup.name = 'HeadPivotGroup';
-
-				// Parent to Torso (Hip) instead of root robot
-				const torso = robot.getObjectByName('body_down_3dprint');
-				if (torso) {
-					torso.add(pivotGroup);
-				} else {
-					robot.add(pivotGroup);
-				}
-
-				// 2. Parent Head to Pivot Group
-				pivotGroup.add(head);
-
-				// 3. Reset Head Transform (Local Offset / Pivot Correction)
-				head.scale.set(1, 1, 1);
-
-				// Apply Calibrated Defaults
-				if (name === 'Left') {
-					// LEFT ROBOT DEFAULTS
-					// Pivot Group (Global)
-					pivotGroup.position.set(0.0290, 0.0280, 0.1430);
-					pivotGroup.rotation.set(-1.6232, -2.0944, -1.9897);
-					// Head (Local Offset)
-					head.position.set(0.0000, 0.0000, 0.0000);
-				} else {
-					// RIGHT ROBOT DEFAULTS
-					// Pivot Group (Global)
-					pivotGroup.position.set(0.0190, 0.0240, 0.1410);
-					pivotGroup.rotation.set(1.7279, -1.2217, 1.2741);
-					// Head (Local Offset)
-					head.position.set(0.0069, 0.0020, 0.0082);
-				}
-
-				// Keep the model's rotation fix for alignment on top of whatever custom rot we just set?
-				// Wait, the "Pivot Group" rotation above likely REPLACES the need for the manual fixing
-				// IF the user calibrated it visually to look correct.
-				// AND the head rotation was typically just "Forward" (PI).
-
-				// HOWEVER, if the user calibrated the pivot group rotation while the head had 
-				// `head.rotation.set(0, 0, Math.PI)` applied (which was in the code during calibration),
-				// then we MUST keep that head rotation here too.
-				head.rotation.set(0, 0, Math.PI);
-
-				// 4. Connect Stewart Rods (Symmetric implementation for all 6 rods)
-				robot.userData.rods = [];
-				const rodLength = 0.085; // Fixed rod length from XML
-
-				// Define Silver Material
-				const silverMaterial = new THREE.MeshStandardMaterial({
-					color: 0xc0c0c0,
-					metalness: 0.9,
-					roughness: 0.2
-				});
-
-				// Apply Silver to Ball Joints on Head
-				head.traverse(c => {
-					if (c.name && c.name.includes('stewart_link_ball')) {
-						c.material = silverMaterial;
-					}
-				});
-
-				for (let i = 1; i <= 6; i++) {
-					// A. Find the Head Anchor (closing_i_2)
-					// Robust recursive search
-					const headAnchorName = `closing_${i}_2`;
-					let headAnchor = null;
-					robot.traverse(child => {
-						if (!headAnchor && child.name && child.name.endsWith(headAnchorName)) {
-							headAnchor = child;
-						}
-					});
-
-					// B. Find the Rod and Motor Anchor
-					const rodBodyName = i === 1 ? 'stewart_link_rod' : `stewart_link_rod_${i}`;
-					let rodBody = null;
-					robot.traverse(child => {
-						if (!rodBody && child.name && child.name.endsWith(rodBodyName)) {
-							rodBody = child;
-						}
-					});
-
-					if (headAnchor && rodBody) {
-						// Fine-tuned offsets based on XML analysis
-						// Mesh Local: Motor=0, Tip=-0.085. 
-						// To put Tip at Container Origin, we shift by +0.085.
-						let tipOffset = rodLength;
-						let lookAtOffset = -Math.PI / 2; // Point +X axis (Motor end) to target
-
-						// If tip was at +0.085, we'd shift by -0.085.
-						// Checking Rods 3-6... XML shows site at +X? 
-						// Actually, most rods in MJCF have Tip at -0.085.
-
-						// C. Create Visual Container attached to Head
-						const rodContainer = new THREE.Object3D();
-						rodContainer.name = `RodWrapper_${i}`;
-
-						// PARENTING: We want to parent to the HEAD BALL JOINT, not the generic 'headAnchor'.
-						// The 'headAnchor' (closing_i_2) is a site.
-						// The Ball Joint is likely a sibling.
-						// Let's find 'stewart_link_ball' inside the parent of headAnchor?
-						// XML: <site name="closing_1_2"> is inside <body name="xl_330">.
-						// <geom mesh="stewart_link_ball__2"> is also inside <body name="xl_330">.
-						// They are siblings in the flat list of the body children.
-						// BUT 'stewart_link_ball__2' seems to be shared or instanced?
-						// In XML there are multiple 'stewart_link_ball__2':
-						// Line 103, Line 117, Line 125, Line 129, Line 131, Line 142.
-						// EXACTLY 6 meshes.
-						// We need to map Rod ID to the correct Ball Joint Mesh.
-						// Rod 1 -> Line 144 closing_1_2.
-						// Which ball joint is near it?
-						// We can use Distance! Find closest 'stewart_link_ball' to 'closing_i_2'.
-
-						const anchorPos = new THREE.Vector3();
-						headAnchor.getWorldPosition(anchorPos);
-
-						// PARENTING: Strict adherence to 'Connection Site' (closing_i_2)
-						// The user explicitly requested using the connection site.
-						headAnchor.add(rodContainer);
-						rodContainer.position.set(0, 0, 0);
-
-						// MESH OFFSET: 
-						// The Rod Mesh is centered. Length ~0.085.
-						// To avoid "skewering" (center at pivot), we must shift it by half length.
-						// We want the TIP to be at (0,0,0).
-						// Shift by +0.0425 (half of 0.085).
-						const halfLength = 0.0425;
-
-						// D. Steal the Mesh
-						const mesh = rodBody.children.find(c => c.type === 'Mesh');
-						if (mesh) {
-							rodContainer.add(mesh);
-							mesh.material = silverMaterial; // Apply Silver
-							// OFFSET FIX: Shift mesh so its TIP is at the container origin (Site)
-							mesh.position.set(halfLength, 0, 0);
-							mesh.rotation.set(0, 0, 0);
-							mesh.scale.set(1, 1, 1);
-						}
-						// E. Register for Updates
-						// The parent of the rod body is the Motor Horn (dc15_a01_horn_dummy...)
-						// The Ball Joint is a sibling of the rod body inside the Motor Horn.
-						const motorHorn = rodBody.parent;
-						let ballJoint = null;
-						if (motorHorn) {
-							// Find the specific ball joint mesh (stewart_link_ball or ball_6 etc)
-							// We look for any child that includes 'stewart_link_ball'
-							ballJoint = motorHorn.children.find(c => c.name && c.name.includes('stewart_link_ball'));
-							if (ballJoint) {
-								// Apply Silver to this specific ball joint too (redundant but safe)
-								ballJoint.material = silverMaterial;
-							}
-						}
-
-						// Store for Animation
-						robot.userData.rods.push({
-							id: i,
-							container: rodContainer,
-							mesh: mesh,
-							motorBody: motorHorn, // Use the actual horn body
-							ballJoint: ballJoint, // The specific target geometry
-							lookAtOffset: lookAtOffset
-						});
-					} else {
-						if (!headAnchor) {
-							console.warn(`⚠️ Rod ${i} missing Head Anchor: ${headAnchorName}`);
-							// LOG ALL NAMES TO FIND IT
-							console.log("Robot child names:", robot.children.map(c => c.name));
-						}
-						if (!rodBody) console.warn(`⚠️ Rod ${i} missing Rod Body: ${rodBodyName}`);
-					}
-				}
-
-				// 5. Store References for Animation/UI
-				robot.userData.headPivot = pivotGroup;
-				robot.userData.headMesh = head;
-
-				// Store "Home" for Animation
-				const initialPos = pivotGroup.position.clone();
-				const initialRot = pivotGroup.rotation.clone();
-				pivotGroup.userData.initialPosition = initialPos.clone();
-				pivotGroup.userData.initialRotation = initialRot.clone();
-
-				// Store initial Matrix for Kinematics reference (World Frame relative to Body)
-				const initMatrix = new THREE.Matrix4().compose(
-					initialPos,
-					new THREE.Quaternion().setFromEuler(initialRot),
-					new THREE.Vector3(1, 1, 1)
-				);
-				// Store raw matrix elements [16]
-				pivotGroup.userData.initialMatrix = initMatrix.elements;
-
-				console.log(`🎯 ${name} Head Reparented to PivotGroup with Calibrated Values.`);
-			} else {
-				console.warn(`⚠️ ${name}: Could not find head (xl_330)`);
-			}
-		}
-
-		// Robot scale for dance data
-		const ROBOT_SCALE = 1.0;
-
-		// Global State for Debugging
-		let isMotionEnabled = true;
-		let globalMotorBias = Math.PI / 2; // Default 90 deg
-
-		// Apply dance frame to robot
-		function applyDanceFrame(robotGroup, frame, mirror = false) {
-			if (!robotGroup || !frame || !robotGroup.userData.headPivot) return;
-
-			// Check if motion is disabled for debugging
-			if (!isMotionEnabled) {
-				// We still want to update rods even if head isn't moving from dance commands
-				// because user might be sliding calibration values.
-				updateRods(robotGroup);
-				return;
-			}
-
-			// 1. HEAD ANIMATION (Target the Pivot Group)
-			const pivot = robotGroup.userData.headPivot;
-
-			// Map Meshes for Inverse Kinematics
-			const jointMap = {};
-			robotGroup.traverse(c => {
-				// Map rod parts if available.
-				// MJCF names are usually mapped to Group names or userData
-				// In our loader, 'body' names are preserved.
-				if (c.name) jointMap[c.name] = c;
-			});
-
-			if (pivot && pivot.userData.initialPosition) {
-				// DEBUG: Log once per 100 frames to avoid spam
-				if (Math.random() < 0.01) {
-					const jointKeys = Object.keys(jointMap);
-					console.log(`[Dance] Applying frame. Pivot: OK. JointMap size: ${jointKeys.length}`);
-					if (jointKeys.length > 0) console.log("Sample Joint Names:", jointKeys.slice(0, 5));
-					if (jointKeys.length < 5) console.warn("JointMap seems empty!", jointMap);
-				}
-				const scale = 20.0;
-				// Frame Pos: [X(Fwd), Y(Left), Z(Up)] -> Mapped to Local Robot (Z-up)
-				// Reachy: X=Fwd, Y=Left, Z=Up
-
-				let dx = frame.pos[0] * scale;
-				let dy = frame.pos[1] * scale;
-				let dz = frame.pos[2] * scale;
-
-				const animOffset = new THREE.Vector3();
-
-				// Position
-				if (frame.pos) {
-					const px = frame.pos[0];
-					const py = frame.pos[1];
-					const pz = frame.pos[2];
-					const yFactor = mirror ? -1 : 1;
-
-					pivot.position.x = pivot.userData.initialPosition.x + px;
-					pivot.position.y = pivot.userData.initialPosition.y + (py * yFactor);
-					pivot.position.z = pivot.userData.initialPosition.z + pz;
-				}
-
-				// Rotation
-				if (frame.rot && frame.rot.length === 3) {
-					const rx = frame.rot[0]; // Roll
-					const ry = frame.rot[1]; // Pitch
-					const rz = frame.rot[2]; // Yaw
-
-					// Mirrored: Flip Roll (Left/Right Tilt) and Yaw (Left/Right Turn). 
-					// Keep Pitch (Up/Down Nod) same.
-					const rxOffset = mirror ? -rx : rx;
-					const ryOffset = ry;
-					const rzOffset = mirror ? -rz : rz;
-
-					// Apply relative to Initial Rotation (Calibration)
-					const initRot = pivot.userData.initialRotation;
-					pivot.rotation.set(
-						initRot.x + rxOffset,
-						initRot.y + ryOffset,
-						initRot.z + rzOffset
-					);
-				}
-
-				// ==========================================
-				// INVERSE KINEMATICS UPDATE (Active + Passive)
-				// ==========================================
-
-				// 1. Calculate Target Matrix for Head
-				//    This uses the CURRENT pivot transform we just set.
-				pivot.updateMatrix();
-				const headMatrix = pivot.matrix.elements; // 16-element array (World Frame relative to robot root)
-
-				// 2. Active IK: Get 6 Motor angles from Head Matrix
-				//    Note: Our 'headMatrix' is in the Robot Root frame (Z-Up).
-				//    Kinematics.js expects this frame.
-
-				// Body Yaw?
-				// dance data doesn't explicitly drive body yaw aside from whole robot rotation?
-				// For now assume 0 body yaw relative to base.
-				const bodyYaw = 0;
-
-				const motorAngles = calculateActiveMotorAngles(headMatrix, bodyYaw);
-				// returns [yaw_body, m1, m2, m3, m4, m5, m6]
-
-				// 3. Passive FK: Get Rod angles from Motor angles + Head Matrix
-				const passiveJoints = calculatePassiveJoints(motorAngles, headMatrix);
-
-				// 4. Apply to Meshes
-				// A. Apply Motor Angles (stewart_1 to stewart_6)
-				// Applying a bias to point horns UP (controlled by UI).
-				const motorBias = globalMotorBias;
-
-				for (let i = 1; i <= 6; i++) {
-					const motorName = `stewart_${i}`;
-					const motorMesh = jointMap[motorName];
-					if (motorMesh) {
-						// Apply bias + IK angle
-						motorMesh.rotation.z = motorAngles[i] + motorBias;
-					}
-				}
-
-				// B. Apply Passive Joints (Rods - Orienting the bases)
-				for (let i = 1; i <= 6; i++) {
-					const idx = (i - 1) * 3;
-					const ex = passiveJoints[idx];
-					const ey = passiveJoints[idx + 1];
-					const ez = passiveJoints[idx + 2];
-
-					// Apply to the specific passive bodies (bases of the rods)
-					const bX = jointMap[`passive_${i}_link_x`];
-					const bY = jointMap[`passive_${i}_link_y`];
-					const bZ = jointMap[`passive_${i}_link_z`];
-
-					if (bX) bX.rotation.x = ex;
-					if (bY) bY.rotation.y = ey;
-					if (bZ) bZ.rotation.z = ez;
-				}
-
-				// C. Apply 7th Passive Joint (Head connection pitch/roll)
-				// Usually handled by the head itself, but we are driving head rigidly.
-				// The passive joints here are for the "top" linkage if visualized.
-				// We can skip applying 18,19,20 if the HeadPivotGroup handles the main motion.
-			}
-
-			// 2. ANTENNAE
-			const antL = robotGroup.getObjectByName('dc15_a01_horn_dummy_8');
-			const antR = robotGroup.getObjectByName('dc15_a01_horn_dummy_7');
-
-			if (antL && antR && frame.ant) {
-				// Store initial Z rotation if not already saved
-				if (antL.userData.initialRotationZ === undefined) antL.userData.initialRotationZ = antL.rotation.z;
-				if (antR.userData.initialRotationZ === undefined) antR.userData.initialRotationZ = antR.rotation.z;
-
-				let lAngle = frame.ant[0];
-				let rAngle = frame.ant[1];
-
-				if (mirror) {
-					// Swap AND Invert because of 180 deg body rotation
-					[lAngle, rAngle] = [-rAngle, -lAngle];
-				}
-
-				antL.rotation.z = antL.userData.initialRotationZ + lAngle;
-				antR.rotation.z = antR.userData.initialRotationZ + rAngle;
-			}
-
-			// 3. HIP
-			const hipBody = robotGroup.getObjectByName('body_down_3dprint');
-			if (hipBody && frame.hip !== undefined) {
-				// Store initial Z rotation if not already saved
-				if (hipBody.userData.initialRotationZ === undefined) {
-					hipBody.userData.initialRotationZ = hipBody.rotation.z;
-					console.log(`[Dance] Stored Initial Hip Z for ${robotGroup.userData ? robotGroup.userData.name : 'robot'}: ${hipBody.userData.initialRotationZ}`);
-				}
-
-				const baseZ = hipBody.userData.initialRotationZ;
-				const currentOffset = mirror ? -frame.hip : frame.hip;
-
-				hipBody.rotation.z = baseZ + currentOffset;
-			}
-		}
-
-		// Create the 'Deep Loop' / NASCAR Turn Geometry
+		// --- DEEP LOOP VISUALIZER ---
 		const columns = 96;
+		const panelsTurn = 32;
+		const panelsLeg = 32;
+		const turnRadius = 25;
+		const legLength = 80;
+		const turnCenterZ = -50;
 
-		// Geometry Configuration
-		const panelsTurn = 32;         // 32 panels for the semi-circular turn
-		const panelsLeg = 32;          // 32 panels for each straight leg (64 total) -> Total 96
-		const turnRadius = 25;         // Tighter turn
-		const legLength = 80;          // Compressed Legs to match turn density (Spacing ~5.0)
-		const turnCenterZ = -50;       // The back of the loop
-		const legStartZ = turnCenterZ; // Legs start where turn ends
-
-		// Helper to determine block height per column
-		function getBlocksForColumn(col) {
-			return 12; // Uniform height as requested
-		}
-
+		const visualizerGroup = new THREE.Group();
+		scene.add(visualizerGroup);
 		const blocks = [];
-		const panelGeometry = new THREE.PlaneGeometry(2.4, 1.25); // Narrower panels for higher resolution
+		const panelGeometry = new THREE.PlaneGeometry(2.4, 1.25);
 
 		for (let col = 0; col < columns; col++) {
 			const columnBlocks = [];
 			let x, z, rotY;
 
-			// Layout: Left Leg -> Turn -> Right Leg
-			// Left Leg: Cols 0-15
-			// Turn: Cols 16-31 (Center is 23/24)
-			// Right Leg: Cols 32-47
-
 			if (col < panelsLeg) {
-				// Left Leg (Straight) - Coming from Z+ towards turn
-				// x = -radius
-				const legProgress = (panelsLeg - 1 - col) / panelsLeg; // 1.0 (near user) -> 0.0 (near turn)
 				x = -turnRadius;
+				const legProgress = (panelsLeg - 1 - col) / panelsLeg;
 				z = turnCenterZ + legProgress * legLength;
-				rotY = Math.PI / 2; // Facing Right (inward)
-			}
-			else if (col < panelsLeg + panelsTurn) {
-				// The Turn (Semi-Circle)
+				rotY = Math.PI / 2;
+			} else if (col < panelsLeg + panelsTurn) {
 				const turnCol = col - panelsLeg;
-				// Angle: -90 (Left tangent) to +90 (Right tangent)
-				// We want the turn to go from X=-R to X=+R
-				// Math.PI (Left) -> 0 (Back) -> 0 ?? No.
-				// circle path: x = R*cos(a), z = R*sin(a)
-				// Left leg is at (-R, 0 relative). Right leg is at (+R, 0).
-				// We want a semi-circle connecting them at the back.
-				// Angle range: Math.PI (Left) to 0 (Right). Wait, standard circle.
-				// Let's use: x = -R * cos(theta), z = -R * sin(theta) ?
-				// Map turnCol (0 to 15) to Angle (PI to 0)
 				const pct = turnCol / (panelsTurn - 1);
-				const angle = Math.PI * (1 - pct); // PI -> 0
-
+				const angle = Math.PI * (1 - pct);
 				x = turnRadius * Math.cos(angle);
 				z = turnCenterZ - turnRadius * Math.sin(angle);
-
-				// Normal points inward. Rotation should align with tangent.
-				// Angle runs PI (Left) -> 0 (Right)
-				// At PI (Left): rotY should be PI/2 (Face +X)
-				// At PI/2 (Back): rotY should be 0 (Face +Z)
-				// Angle - PI/2 gives us this.
 				rotY = angle - Math.PI / 2;
-			}
-			else {
-				// Right Leg (Straight) - Going from turn to Z+
+			} else {
 				const rightCol = col - (panelsLeg + panelsTurn);
-				const legProgress = rightCol / panelsLeg; // 0.0 (near turn) -> 1.0 (near user)
+				const legProgress = rightCol / panelsLeg;
 				x = turnRadius;
 				z = turnCenterZ + legProgress * legLength;
-				rotY = -Math.PI / 2; // Facing Left (inward)
+				rotY = -Math.PI / 2;
 			}
 
-			const blocksInColumn = getBlocksForColumn(col);
-
-			for (let row = 0; row < blocksInColumn; row++) {
-				// OLED Material - High intensity emissive
+			for (let row = 0; row < 12; row++) {
 				const material = new THREE.MeshStandardMaterial({
-					color: 0x000000,
-					emissive: 0xffffff,
-					emissiveIntensity: 0,
+					color: 0x111111,
+					emissive: 0x000000,
 					transparent: true,
-					opacity: 0,
-					roughness: 0,
-					metalness: 0,
+					opacity: 0.05,
 					side: THREE.FrontSide
 				});
-
 				const block = new THREE.Mesh(panelGeometry, material);
-				block.position.x = x;
-				block.position.y = (row - blocksInColumn / 2) * 1.28; // Tighter padding
-				block.position.z = z;
+				block.position.set(x, (row - 6) * 1.28, z);
 				block.rotation.y = rotY;
-
-				scene.add(block);
-				columnBlocks.push({
-					mesh: block,
-					maxHeight: blocksInColumn,
-					rowIndex: row
-				});
+				visualizerGroup.add(block);
+				columnBlocks.push({ mesh: block, material: material });
 			}
 			blocks.push(columnBlocks);
 		}
+		visualizerGroup.scale.set(0.2, 0.2, 0.2);
+		visualizerGroup.position.set(0, 0, -5);
 
-
-		// Lighting - Replaced by Studio Setup at Scene Init
-		// (Removed old AmbientLight/PointLights to fix redeclaration error)
-
-		const pointLight3 = new THREE.PointLight(0xff00ff, 0.5, 100);
-		pointLight3.position.set(20, 0, 10);
-		scene.add(pointLight3);
-
-		// Floating music notes
-		const noteGeometry = new THREE.SphereGeometry(0.3, 8, 8);
-		const noteMaterial = new THREE.MeshPhongMaterial({
-			color: 0xffffff,
-			emissive: 0xffffff,
-			emissiveIntensity: 0.5,
-			transparent: true,
-			opacity: 0.8
-		});
-
-		const musicNotes = [];
-		for (let i = 0; i < 20; i++) {
-			const note = new THREE.Mesh(noteGeometry, noteMaterial.clone());
-			note.position.set(
-				(Math.random() - 0.5) * 60,
-				(Math.random() - 0.5) * 40,
-				(Math.random() - 0.5) * 40
-			);
-			note.userData.velocity = {
-				y: Math.random() * 0.1 + 0.05,
-				x: (Math.random() - 0.5) * 0.05
-			};
-			scene.add(note);
-			musicNotes.push(note);
-		}
-
-		// Load pre-analyzed audio data from JSON file
-		async function loadAudioAnalysis(jsonFilePath) {
-			console.log('📥 Loading pre-analyzed audio data...');
-
-			try {
-				const response = await fetch(jsonFilePath);
-				const analyzedData = await response.json();
-
-				console.log(`✅ Loaded ${analyzedData.samples.length} samples`);
-				console.log(`📊 Duration: ${analyzedData.duration.toFixed(2)}s`);
-				console.log(`📊 Sample rate: ${analyzedData.actualSampleRate.toFixed(1)} Hz`);
-
-				return analyzedData;
-
-			} catch (error) {
-				console.error('❌ Failed to load audio analysis:', error);
-				return null;
-			}
-		}
-
-		// Shared audio setup function
-		let currentAudioElement = null;
-
-		function setupAudioAnalyzers(source) {
-			// Main analyser with higher resolution
-			analyser = audioContext.createAnalyser();
-			analyser.fftSize = 2048;
-			analyser.smoothingTimeConstant = 0.6;
-
-			// Create frequency band analyzers (like librosa's frequency bands)
-			// Bass: 20-250 Hz
-			const bassFilter = audioContext.createBiquadFilter();
-			bassFilter.type = 'lowpass';
-			bassFilter.frequency.value = 250;
-			bassAnalyser = audioContext.createAnalyser();
-			bassAnalyser.fftSize = 512;
-			source.connect(bassFilter);
-			bassFilter.connect(bassAnalyser);
-
-			// Mids: 250-2000 Hz
-			const midFilter = audioContext.createBiquadFilter();
-			midFilter.type = 'bandpass';
-			midFilter.frequency.value = 1000;
-			midFilter.Q.value = 1;
-			midAnalyser = audioContext.createAnalyser();
-			midAnalyser.fftSize = 512;
-			source.connect(midFilter);
-			midFilter.connect(midAnalyser);
-
-			// Highs: 2000+ Hz
-			const highFilter = audioContext.createBiquadFilter();
-			highFilter.type = 'highpass';
-			highFilter.frequency.value = 2000;
-			highAnalyser = audioContext.createAnalyser();
-			highAnalyser.fftSize = 512;
-			source.connect(highFilter);
-			highFilter.connect(highAnalyser);
-
-			// Connect main analyser
-			source.connect(analyser);
-
-			// Initialize data arrays
-			const bufferLength = analyser.frequencyBinCount;
-			dataArray = new Uint8Array(bufferLength);
-			bassData = new Uint8Array(bassAnalyser.frequencyBinCount);
-			midData = new Uint8Array(midAnalyser.frequencyBinCount);
-			highData = new Uint8Array(highAnalyser.frequencyBinCount);
-
-			audioStarted = true;
-		}
-
-		// Toggle audio mute/unmute
+		// --- AUDIO SYSTEM ---
+		const audio = document.getElementById('dance-audio');
 		const toggleBtn = document.getElementById('toggleAudio');
+		let audioContext, analyser, dataArray;
+		let audioStarted = false;
+
 		toggleBtn.addEventListener('click', async () => {
-			if (!audioElement) return;
-
-			// Ensure audio is playing (if it was blocked by autoplay policy)
-			if (audioElement.paused) {
-				const currentVisualizationTime = (Date.now() - visualizationStartTime) / 1000;
-				const syncTime = currentVisualizationTime % preAnalyzedData.duration;
-				audioElement.currentTime = syncTime;
-				await audioElement.play();
+			if (!audioContext) {
+				audioContext = new (window.AudioContext || window.webkitAudioContext)();
+				const source = audioContext.createMediaElementSource(audio);
+				analyser = audioContext.createAnalyser();
+				analyser.fftSize = 2048;
+				source.connect(analyser);
+				source.connect(audioContext.destination);
+				dataArray = new Uint8Array(analyser.frequencyBinCount);
+				audioStarted = true;
 			}
 
-			// Just toggle mute
-			if (isAudioMuted) {
-				audioElement.muted = false;
-				isAudioMuted = false;
-				toggleBtn.innerHTML = '<span class="btn-icon">🔇</span>Mute';
-				toggleBtn.classList.add('active');
-				console.log('🔊 Audio unmuted');
+			if (audioContext.state === 'suspended') await audioContext.resume();
+
+			if (audio.paused) {
+				await audio.play();
+				toggleBtn.textContent = '⏸ Pause Demo Audio';
 			} else {
-				audioElement.muted = true;
-				isAudioMuted = true;
-				toggleBtn.innerHTML = '<span class="btn-icon">🔊</span>Unmute';
-				toggleBtn.classList.remove('active');
-				console.log('🔇 Audio muted');
+				audio.pause();
+				toggleBtn.textContent = '🔊 Start Demo Audio';
 			}
 		});
 
-		// Load Dance JSON Data
-		async function loadDanceData() {
+		// --- GLOBAL ROBOTS ---
+		const leftRobot = new ReachyRobot('Left', -0.8, false);
+		const rightRobot = new ReachyRobot('Right', 0.8, true);
+
+		let danceData = null;
+		let startTime = 0;
+		let noteSystem, svgSystem;
+		const rowPeaks = Array(12).fill(0).map(() => ({ left: 40.5, right: 54.5 }));
+
+		async function startAnimation() {
 			try {
-				const response = await fetch('dance_data.json');
-				if (!response.ok) throw new Error('Dance data not found');
-				danceData = await response.json();
-				console.log(`💃 Dance Data Loaded: ${danceData.frames.length} frames @ ${danceData.fps} FPS`);
-				return true;
-			} catch (e) {
-				console.error('Failed to load dance data:', e);
-				return false;
+				noteSystem = new MusicNoteSystem(scene);
+				svgSystem = new SVG3DSystem(scene);
+				// Use a dummy SVG path or correctly link to assets
+				svgSystem.load('assets/dance_duo.svg');
+
+				const [danceRes] = await Promise.all([
+					fetch('dance_data.json'),
+					leftRobot.load('reachy_mini.xml'),
+					rightRobot.load('reachy_mini.xml')
+				]);
+
+				const data = await danceRes.json();
+				danceData = data.frames || data;
+
+				startTime = performance.now();
+				requestAnimationFrame(animate);
+			} catch (err) {
+				console.error("Init Failed", err);
 			}
 		}
 
-		// Initialize audio on page load
-		async function initializeAudio() {
-			const audioFilePath = 'downloads/Both of you, Dance Like You Want to Win!.wav';
-			const analysisFilePath = 'downloads/audio_analysis.json';
-
-			try {
-				// Load dance data
-				await loadDanceData();
-
-				// Load pre-analyzed audio data
-				preAnalyzedData = await loadAudioAnalysis(analysisFilePath);
-
-				if (preAnalyzedData) {
-					// Create audio element
-					audioElement = new Audio(audioFilePath);
-					audioElement.loop = true;
-					audioElement.muted = true; // Start Muted for Silent Running
-
-					// Start visualization immediately
-					visualizationStartTime = Date.now();
-					isPlaying = true;
-
-					// Attempt Silent Running (Autoplay Muted)
-					try {
-						await audioElement.play();
-						console.log('✅ Audio engine started (Silent Running)');
-					} catch (e) {
-						console.warn('⚠️ Autoplay blocked, waiting for user interaction', e);
-					}
-
-					// Update button to ready state
-					toggleBtn.innerHTML = '<span class="btn-icon">🔊</span>Unmute';
-					toggleBtn.disabled = false;
-				} else {
-					throw new Error('Failed to load analysis data');
-				}
-			} catch (error) {
-				console.error('Failed to initialize audio:', error);
-				toggleBtn.innerHTML = '<span class="btn-icon">⚠️</span>Audio Load Failed';
-				alert('Could not load the audio analysis. Make sure the server is running and files are in the downloads folder.');
-			}
-		}
-
-		// Start initialization
-		toggleBtn.disabled = true;
-		initializeAudio();
-
-		// Save camera position functionality
-		const saveCameraBtn = document.getElementById('saveCameraBtn');
-		saveCameraBtn.addEventListener('click', () => {
-			const position = camera.position;
-			const target = controls.target;
-
-			// Calculate view direction
-			const direction = new THREE.Vector3();
-			camera.getWorldDirection(direction);
-
-			const cameraData = {
-				position: {
-					x: position.x.toFixed(2),
-					y: position.y.toFixed(2),
-					z: position.z.toFixed(2)
-				},
-				target: {
-					x: target.x.toFixed(2),
-					y: target.y.toFixed(2),
-					z: target.z.toFixed(2)
-				},
-				direction: {
-					x: direction.x.toFixed(3),
-					y: direction.y.toFixed(3),
-					z: direction.z.toFixed(3)
-				}
-			};
-
-			console.log('📷 Camera Position Saved:');
-			console.log('Position:', `(${cameraData.position.x}, ${cameraData.position.y}, ${cameraData.position.z})`);
-			console.log('Target:', `(${cameraData.target.x}, ${cameraData.target.y}, ${cameraData.target.z})`);
-			console.log('Direction:', `(${cameraData.direction.x}, ${cameraData.direction.y}, ${cameraData.direction.z})`);
-			console.log('\nCode snippet:');
-			console.log(`camera.position.set(${cameraData.position.x}, ${cameraData.position.y}, ${cameraData.position.z});`);
-			console.log(`controls.target.set(${cameraData.target.x}, ${cameraData.target.y}, ${cameraData.target.z});`);
-
-			// Also show in alert for easy copying
-			alert(`Camera Position Saved! Check console for details.\n\nPosition: (${cameraData.position.x}, ${cameraData.position.y}, ${cameraData.position.z})\nTarget: (${cameraData.target.x}, ${cameraData.target.y}, ${cameraData.target.z})`);
-		});
-
-		// Helper: VIBGYOR Rainbow Mapping (Custom Gradient)
-		// t: 0.0 (Violet) -> 1.0 (Red)
-		// Goal: Favor the ends (Violet/Blue and Orange/Red), compress the Green/Yellow center.
-		function getRainbowColor(t) {
-			t = Math.max(0, Math.min(1, t));
-
-			// Define Gradient Stops (Favoring ends)
-			// 0.0 - 0.35: Violet -> Blue
-			// 0.35 - 0.65: Blue -> Green -> Yellow -> Orange (Compressed Middle)
-			// 0.65 - 1.0: Orange -> Red
-
-			const stops = [
-				{ t: 0.00, c: new THREE.Color(0x8B00FF) }, // Violet
-				{ t: 0.20, c: new THREE.Color(0x4B0082) }, // Indigo
-				{ t: 0.40, c: new THREE.Color(0x0000FF) }, // Blue
-				{ t: 0.50, c: new THREE.Color(0x00FF00) }, // Green (Center)
-				{ t: 0.60, c: new THREE.Color(0xFFFF00) }, // Yellow
-				{ t: 0.80, c: new THREE.Color(0xFF7F00) }, // Orange
-				{ t: 1.00, c: new THREE.Color(0xFF0000) }  // Red
-			];
-
-			// Find which stops we are between
-			for (let i = 0; i < stops.length - 1; i++) {
-				const start = stops[i];
-				const end = stops[i + 1];
-
-				if (t >= start.t && t <= end.t) {
-					// Normalize t between these two stops
-					const localT = (t - start.t) / (end.t - start.t);
-					return start.c.clone().lerp(end.c, localT);
-				}
-			}
-
-			return stops[stops.length - 1].c.clone();
-		}
-
-		// Peak Hold Data for 12 Rows (Left and Right peaks)
-		// 12 Rows corresponding to block rows 0..11
-		// However, our blocks[][] are organized by Column, then Row.
-		// We process by Row now.
-		const rowPeaks = Array(12).fill(0).map(() => ({ left: 0, right: 0 }));
-
-		// Animation loop
-		function animate() {
+		function animate(time) {
 			requestAnimationFrame(animate);
 
-			// Update controls
-			controls.update();
+			if (danceData && danceData.length > 0) {
+				let currentTime = 0;
+				if (audioStarted && !audio.paused) currentTime = audio.currentTime;
+				else currentTime = (time - startTime) / 1000;
 
-			const time = Date.now() / 1000;
+				const frameIndex = Math.floor(currentTime * 30) % danceData.length;
+				const frame = danceData[frameIndex];
 
-			// DIAGNOSTIC FORCE MOVE: 
-			// If ordinary animation fails, this Sine Wave will prove if we have control of the meshes.
-			if (leftRobot && rightRobot) {
-				const wave = Math.sin(time * 2) * 0.5;
-
-				// Force find a motor and rotate it
-				leftRobot.traverse(c => {
-					if (c.name && c.name.includes('stewart')) {
-						// c.rotation.z = wave; // Force Wiggle
-					}
-				});
+				leftRobot.applyPose(frame);
+				rightRobot.applyPose(frame);
 			}
 
-			// 1. Get Audio Data for 12 Bands
-			// We need to map available frequency data to 12 rows.
-			// Row 0 (Bottom) -> Bass
-			// Row 11 (Top) -> Treble
-
-			if (danceData && isPlaying && leftRobot && rightRobot) {
-				const fps = danceData.fps || (danceData.metadata ? danceData.metadata.fps : 60);
-				const totalDuration = danceData.frames.length / fps;
-
-				// Loop the dance time
-				const danceTime = ((Date.now() - visualizationStartTime) / 1000) % totalDuration;
-
-				const frameIndex = Math.floor(danceTime * fps);
-
-				if (frameIndex >= 0 && frameIndex < danceData.frames.length) {
-					const frame = danceData.frames[frameIndex];
-					applyDanceFrame(leftRobot, frame, false); // Mirror = false
-					applyDanceFrame(rightRobot, frame, true);  // Mirror = true
-				}
-			}
-
-			// 1. Get Audio Data for 12 Bands
-			// We need to map available frequency data to 12 rows.
-			// Row 0 (Bottom) -> Bass
-			// Row 11 (Top) -> Treble
-
-			const numRows = 12; // Visual Rows
-			const bandVolumes = new Array(numRows).fill(0); // Audio Bands
-			let isOnset = false;
-
-			if (isPlaying && preAnalyzedData) {
-				// PRERECORDED
-				// Use Audio Element time if running, else use System Time
-				let currentTime;
-				if (audioElement && !audioElement.paused) {
-					currentTime = audioElement.currentTime;
-				} else {
-					currentTime = (Date.now() - visualizationStartTime) / 1000;
-				}
-
-				const sampleIndex = Math.floor((currentTime % preAnalyzedData.duration) * preAnalyzedData.actualSampleRate);
-
-				if (sampleIndex < preAnalyzedData.samples.length) {
-					const sample = preAnalyzedData.samples[sampleIndex];
-					isOnset = sample.onset;
-
-					// Map Bass/Mid/High into 12 bands
-					// 0-3: Bass, 4-7: Mid, 8-11: High
-					for (let r = 0; r < numRows; r++) {
-						if (r < 4) bandVolumes[r] = sample.bass;
-						else if (r < 8) bandVolumes[r] = sample.mid;
-						else bandVolumes[r] = sample.high;
-					}
-				}
-			} else if (audioStarted && analyser) {
-				// LIVE MICROPHONE (Better 12-band resolution)
+			// Visualizer Logic
+			const bandVolumes = new Array(12).fill(0);
+			if (audioStarted && analyser) {
 				analyser.getByteFrequencyData(dataArray);
-				// Linear interpolate 12 bands from the dataArray
-				const binSize = Math.floor(dataArray.length / numRows);
-				for (let r = 0; r < numRows; r++) {
+				const binSize = Math.floor(dataArray.length / 12);
+				for (let r = 0; r < 12; r++) {
 					let sum = 0;
-					for (let i = 0; i < binSize; i++) {
-						sum += dataArray[r * binSize + i];
-					}
-					bandVolumes[r] = (sum / binSize) / 255; // Normalize 0..1
+					for (let i = 0; i < binSize; i++) sum += dataArray[r * binSize + i];
+					bandVolumes[r] = Math.min((sum / binSize / 255) * 5.0, 1.0);
 				}
 			}
 
-			// Apply Dampening and Remap to Visual Rows
-			// Dampen the lowest Bass bands to prevent "shooting out" too far
-			bandVolumes[0] *= 0.6;
-			bandVolumes[1] *= 0.7;
-			bandVolumes[2] *= 0.8;
+			if (noteSystem) noteSystem.update(0.016);
+			if (svgSystem) svgSystem.update(0.016);
 
-			// Visual Mapping: Centered "Diamond" Distribution
-			// Frequencies: [11 9 7 5 3 1  0  2 4 6 8 10] (Zig-Zag fill from center)
-			// Visual Rows: [0  1 2 3 4 5  6  7 8 9 10 11]
-			// 
-			// Row 6: Band 0 (Bass)
-			// Row 5: Band 1
-			// Row 7: Band 2
-			// Row 4: Band 3
-			// ...
-
-			const rowVolumes = new Array(numRows).fill(0);
-			const mapping = [
-				11, // Row 0 (Bottom) -> High Treble
-				9,  // Row 1
-				7,  // Row 2
-				5,  // Row 3
-				3,  // Row 4
-				1,  // Row 5 -> Low Bass
-				0,  // Row 6 -> Main Bass (Center)
-				2,  // Row 7 -> Low Bass
-				4,  // Row 8
-				6,  // Row 9 
-				8,  // Row 10
-				10  // Row 11 (Top) -> High
-			];
-
-			for (let r = 0; r < numRows; r++) {
-				rowVolumes[r] = bandVolumes[mapping[r]] || 0;
-			}
-
-			// 2. Render Rows
-			const centerCol = 47.5; // Between 47 and 48
-			const baseHalfWidth = 7; // Starts with ~14 blocks lit (7 Left, 7 Right)
-			const maxHalfWidth = 48;   // Expands to edge
-
-			// Clear all blocks first (or reset state)
-			// Optimized: We iterate per block in the loops below anyway.
-
-			// We need to iterate ALL blocks to set them correctly.
-			// It's easier to iterate Columns then Rows to match the 'blocks' structure,
-			// or iterate Rows then Columns. Let's do Row-major for the logic.
+			// Deep Loop Update
+			const mapping = [11, 9, 7, 5, 3, 1, 0, 2, 4, 6, 8, 10];
+			const centerCol = 47.5;
+			const maxHalfWidth = 48;
 
 			for (let r = 0; r < 12; r++) {
-				// Calculate Active Width for this Row
-				// Volume impacts expansion
-				const vol = rowVolumes[r];
+				const vol = bandVolumes[mapping[r]] || 0;
+				const halfW = 7 + (vol * 41);
+				const start = Math.floor(centerCol - halfW);
+				const end = Math.ceil(centerCol + halfW);
 
-				// Expansion: volume * (Max - Base)
-				// Add some "elasticity" or boost
-				const expansion = vol * (maxHalfWidth - baseHalfWidth);
-				const currentHalfWidth = baseHalfWidth + expansion;
+				if (rowPeaks[r].left > start) rowPeaks[r].left -= 1.0;
+				else rowPeaks[r].left = start;
+				if (rowPeaks[r].right < end) rowPeaks[r].right += 1.0;
+				else rowPeaks[r].right = end;
 
-				const startColLimit = Math.floor(centerCol - currentHalfWidth);
-				const endColLimit = Math.ceil(centerCol + currentHalfWidth);
-
-				// Leader Block Decay
-				if (rowPeaks[r].left > startColLimit) rowPeaks[r].left -= 1.0; // Decay inward
-				if (rowPeaks[r].left < startColLimit) rowPeaks[r].left = startColLimit; // Push outward
-
-				if (rowPeaks[r].right < endColLimit) rowPeaks[r].right += 1.0; // Decay inward
-				if (rowPeaks[r].right > endColLimit) rowPeaks[r].right = endColLimit; // Push outward
-
-
-				// Iterate all columns for this row
 				for (let c = 0; c < columns; c++) {
-					const blockData = blocks[c][r]; // blocks[col][row]
-					if (!blockData) continue;
+					const blockData = blocks[c][r];
+					let isLit = (c >= start && c <= end);
+					let isLeader = (c === Math.floor(rowPeaks[r].left) || c === Math.floor(rowPeaks[r].right));
 
-					const block = blockData.mesh;
-
-					// Determine visual state
-					let isLit = false;
-					let isLeader = false;
-					let colorScalar = 0; // 0.0 (Violet) -> 1.0 (Red)
-
-					// Is this block inside the active rainbow?
-					// Strictly between Start and End
-					if (c >= startColLimit && c <= endColLimit) {
-						isLit = true;
-
-						// Elastic Map:
-						// Calculate position relative to the CURRENT active width
-						// 0.0 = Leftmost Active Block
-						// 1.0 = Rightmost Active Block
-						const relativePos = (c - startColLimit) / (endColLimit - startColLimit);
-						colorScalar = relativePos;
-					}
-
-					// Is this a leader block?
-					// Left Peak (Violet side)
-					if (c === Math.floor(rowPeaks[r].left)) {
-						isLeader = true;
-						isLit = true;
-						colorScalar = 0.0;
-					}
-					// Right Peak (Red side)
-					if (c === Math.floor(rowPeaks[r].right)) {
-						isLeader = true;
-						isLit = true;
-						colorScalar = 1.0;
-					}
-
-					// Apply Material
-					if (isLit) {
-						block.material.opacity = 0.9;
-						block.material.emissiveIntensity = 0.8 + (vol * 0.5); // Pulse with volume
-
-						// Rainbow Body for all (Leader uses end colors)
-						const rainbowColor = getRainbowColor(colorScalar);
-						block.material.color.copy(rainbowColor);
-						block.material.emissive.copy(rainbowColor);
-
-						if (isLeader) {
-							block.material.emissiveIntensity = 1.2; // Keep slight boost
-						}
+					if (isLit || isLeader) {
+						blockData.material.opacity = 0.9;
+						blockData.material.emissive.copy(getRainbowColor((c - start) / (end - start || 1)));
+						blockData.material.emissiveIntensity = isLeader ? 0.95 : 0.8;
 					} else {
-						// OFF / Trail
-						block.material.opacity = 0.05;
-						block.material.emissiveIntensity = 0;
-						block.material.color.setHex(0x111111);
-						block.material.emissive.setHex(0x000000);
+						blockData.material.opacity = 0.05;
+						blockData.material.emissiveIntensity = 0;
 					}
 				}
 			}
 
-			// Animate music notes
-			musicNotes.forEach(note => {
-				note.position.y += note.userData.velocity.y;
-				note.position.x += note.userData.velocity.x;
-				note.rotation.y += 0.02;
-
-				if (note.position.y > 25) {
-					note.position.y = -25;
-				}
-				if (Math.abs(note.position.x) > 35) {
-					note.userData.velocity.x *= -1;
-				}
-			});
-
-			if (leftRobot) updateRods(leftRobot);
-			if (rightRobot) updateRods(rightRobot);
-
-			renderer.render(scene, camera);
+			composer.render();
 		}
 
-		// Handle window resize
 		window.addEventListener('resize', () => {
 			camera.aspect = window.innerWidth / window.innerHeight;
 			camera.updateProjectionMatrix();
 			renderer.setSize(window.innerWidth, window.innerHeight);
+			composer.setSize(window.innerWidth, window.innerHeight);
 		});
 
-		// ==========================================
-		// HEAD CALIBRATION UI LOGIC
-		// ==========================================
-
-		const calibUI = {
-			panel: document.getElementById('calibrationPanel'),
-			robotSelect: document.getElementById('robotSelect'),
-			inputs: {
-				// Global Position (Pivot Group)
-				posX: document.getElementById('posX'), valPosX: document.getElementById('valPosX'),
-				posY: document.getElementById('posY'), valPosY: document.getElementById('valPosY'),
-				posZ: document.getElementById('posZ'), valPosZ: document.getElementById('valPosZ'),
-				// Global Rotation (Pivot Group)
-				rotX: document.getElementById('rotX'), valRotX: document.getElementById('valRotX'),
-				rotY: document.getElementById('rotY'), valRotY: document.getElementById('valRotY'),
-				rotZ: document.getElementById('rotZ'), valRotZ: document.getElementById('valRotZ'),
-				// Pivot Offset (Child Local Position)
-				pivX: document.getElementById('pivX'), valPivX: document.getElementById('valPivX'),
-				pivY: document.getElementById('pivY'), valPivY: document.getElementById('valPivY'),
-				pivZ: document.getElementById('pivZ'), valPivZ: document.getElementById('valPivZ'),
-				// Mechanical Debugging
-				motorBias: document.getElementById('motorBiasSlider'), valMotorBias: document.getElementById('valMotorBias'),
-			},
-			saveBtn: document.getElementById('saveConfigBtn'),
-			toggleBtn: document.getElementById('toggleCalib'),
-			motionBtn: document.getElementById('toggleMotion'),
-			resetBtn: document.getElementById('resetNeutral')
-		};
-
-		let activeRobotName = 'left';
-
-		function getActivePivot() {
-			const robot = (activeRobotName === 'left') ? leftRobot : rightRobot;
-			return robot ? robot.userData.headPivot : null;
-		}
-
-		function getActiveHead() {
-			const robot = (activeRobotName === 'left') ? leftRobot : rightRobot;
-			return robot ? robot.userData.headMesh : null;
-		}
-
-		// Update UI from current head/pivot values
-		function updateUIFromHead() {
-			const pivot = getActivePivot();
-			const head = getActiveHead();
-			if (!pivot || !head) return;
-
-			// Position (Pivot Group)
-			calibUI.inputs.posX.value = calibUI.inputs.valPosX.value = pivot.position.x.toFixed(4);
-			calibUI.inputs.posY.value = calibUI.inputs.valPosY.value = pivot.position.y.toFixed(4);
-			calibUI.inputs.posZ.value = calibUI.inputs.valPosZ.value = pivot.position.z.toFixed(4);
-
-			// Rotation (Pivot Group) -> Radians to Degrees
-			calibUI.inputs.rotX.value = calibUI.inputs.valRotX.value = THREE.MathUtils.radToDeg(pivot.rotation.x).toFixed(1);
-			calibUI.inputs.rotY.value = calibUI.inputs.valRotY.value = THREE.MathUtils.radToDeg(pivot.rotation.y).toFixed(1);
-			calibUI.inputs.rotZ.value = calibUI.inputs.valRotZ.value = THREE.MathUtils.radToDeg(pivot.rotation.z).toFixed(1);
-
-			// Pivot Offset (Head Local Position)
-			// Check if elements exist (in case of partial load)
-			if (calibUI.inputs.pivX) {
-				calibUI.inputs.pivX.value = calibUI.inputs.valPivX.value = head.position.x.toFixed(4);
-				calibUI.inputs.pivY.value = calibUI.inputs.valPivY.value = head.position.y.toFixed(4);
-				calibUI.inputs.pivZ.value = calibUI.inputs.valPivZ.value = head.position.z.toFixed(4);
-			}
-
-			// Sync Motor Bias
-			if (calibUI.inputs.motorBias) {
-				const biasDeg = THREE.MathUtils.radToDeg(globalMotorBias).toFixed(0);
-				calibUI.inputs.motorBias.value = calibUI.inputs.valMotorBias.value = biasDeg;
-			}
-		}
-
-		// Update Head/Pivot from UI values
-		function updateHeadFromUI() {
-			const pivot = getActivePivot();
-			const head = getActiveHead();
-			if (!pivot || !head) return;
-
-			// Update Pivot Group (Global Placement)
-			const px = parseFloat(calibUI.inputs.posX.value);
-			const py = parseFloat(calibUI.inputs.posY.value);
-			const pz = parseFloat(calibUI.inputs.posZ.value);
-
-			const rx = THREE.MathUtils.degToRad(parseFloat(calibUI.inputs.rotX.value));
-			const ry = THREE.MathUtils.degToRad(parseFloat(calibUI.inputs.rotY.value));
-			const rz = THREE.MathUtils.degToRad(parseFloat(calibUI.inputs.rotZ.value));
-
-			pivot.position.set(px, py, pz);
-			pivot.rotation.set(rx, ry, rz);
-
-			// CRITICAL: Update the animation base values so the dance doesn't overwrite calibration
-			if (pivot.userData) {
-				if (!pivot.userData.initialPosition) pivot.userData.initialPosition = new THREE.Vector3();
-				if (!pivot.userData.initialRotation) pivot.userData.initialRotation = new THREE.Euler();
-
-				pivot.userData.initialPosition.set(px, py, pz);
-				pivot.userData.initialRotation.set(rx, ry, rz);
-			}
-
-			// Update Head (Local Offset)
-			if (calibUI.inputs.pivX) {
-				const offX = parseFloat(calibUI.inputs.pivX.value);
-				const offY = parseFloat(calibUI.inputs.pivY.value);
-				const offZ = parseFloat(calibUI.inputs.pivZ.value);
-				head.position.set(offX, offY, offZ);
-			}
-
-			// Update Mechanical Debugging
-			if (calibUI.inputs.motorBias) {
-				const biasDeg = parseFloat(calibUI.inputs.motorBias.value);
-				globalMotorBias = THREE.MathUtils.degToRad(biasDeg);
-			}
-
-			// Force update matrix for visual feedback
-			pivot.updateMatrix();
-			head.updateMatrix();
-
-			// If motion is paused, force a rod update immediately
-			if (!isMotionEnabled) {
-				updateRods(leftRobot);
-				updateRods(rightRobot);
-			}
-		}
-
-		// Bind Events
-		calibUI.robotSelect.addEventListener('change', (e) => {
-			activeRobotName = e.target.value;
-			updateUIFromHead();
-		});
-
-		// Bind Sliders & Inputs
-		Object.keys(calibUI.inputs).forEach(key => {
-			const el = calibUI.inputs[key];
-			if (!el) return;
-
-			el.addEventListener('input', (e) => {
-				// Sync slider <-> number input
-				// keys: posX, valPosX, pivX, valPivX
-				if (key.startsWith('val')) {
-					// valPosX -> posX
-					// Remove 'val' and lower case first char: valPosX -> posX
-					const base = key.substring(3);
-					const targetKey = base.charAt(0).toLowerCase() + base.slice(1);
-
-					if (calibUI.inputs[targetKey]) {
-						calibUI.inputs[targetKey].value = el.value;
-					}
-				} else {
-					// posX -> valPosX
-					const targetKey = 'val' + key.charAt(0).toUpperCase() + key.slice(1);
-					if (calibUI.inputs[targetKey]) {
-						calibUI.inputs[targetKey].value = el.value;
-					}
-				}
-				updateHeadFromUI();
-			});
-		});
-
-		if (calibUI.toggleBtn) {
-			calibUI.toggleBtn.addEventListener('click', () => {
-				calibUI.panel.style.display = 'none';
-			});
-		}
-
-		if (calibUI.motionBtn) {
-			calibUI.motionBtn.addEventListener('click', () => {
-				isMotionEnabled = !isMotionEnabled;
-				calibUI.motionBtn.textContent = isMotionEnabled ? "PAUSE MOTION" : "RESUME MOTION";
-				calibUI.motionBtn.style.background = isMotionEnabled ? "#e91e63" : "#4CAF50";
-			});
-		}
-
-		if (calibUI.resetBtn) {
-			calibUI.resetBtn.addEventListener('click', () => {
-				const pivot = getActivePivot();
-				const head = getActiveHead();
-				if (!pivot || !head) return;
-
-				if (activeRobotName === 'left') {
-					pivot.position.set(0.0290, 0.0280, 0.1430);
-					pivot.rotation.set(-1.6232, -2.0944, -1.9897);
-					head.position.set(0.0000, 0.0000, 0.0000);
-				} else {
-					pivot.position.set(0.0190, 0.0240, 0.1410);
-					pivot.rotation.set(1.7279, -1.2217, 1.2741);
-					head.position.set(0.0069, 0.0020, 0.0082);
-				}
-
-				// Sync UI and Base Values
-				updateHeadFromUI();
-				updateUIFromHead();
-			});
-		}
-
-		// Listen for 'C' key to toggle panel
-		window.addEventListener('keydown', (e) => {
-			if (e.key.toLowerCase() === 'c') {
-				calibUI.panel.style.display = (calibUI.panel.style.display === 'none') ? 'block' : 'none';
-				if (calibUI.panel.style.display === 'block') {
-					updateUIFromHead();
-				}
-			}
-		});
-
-		// Save / Copy
-		calibUI.saveBtn.addEventListener('click', () => {
-			const pivot = getActivePivot();
-			const head = getActiveHead();
-			if (!pivot || !head) return;
-
-			const snippet = `
-// Calibrated Defaults for ${activeRobotName.toUpperCase()}
-// 1. Pivot Group (Global Placement):
-pivotGroup.position.set(${pivot.position.x.toFixed(4)}, ${pivot.position.y.toFixed(4)}, ${pivot.position.z.toFixed(4)});
-pivotGroup.rotation.set(${pivot.rotation.x.toFixed(4)}, ${pivot.rotation.y.toFixed(4)}, ${pivot.rotation.z.toFixed(4)});
-
-// 2. Head Local Offset (Pivot Correction):
-head.position.set(${head.position.x.toFixed(4)}, ${head.position.y.toFixed(4)}, ${head.position.z.toFixed(4)});
-`;
-
-			navigator.clipboard.writeText(snippet).then(() => {
-				alert("Config copied to clipboard:\\n" + snippet);
-			}).catch(err => {
-				console.error('Failed to copy', err);
-				prompt("Copy this:", snippet);
-			});
-		});
-
-		// Initial sync
-		setTimeout(() => {
-			updateUIFromHead();
-			console.log("Press 'C' to toggle Head Calibration Panel");
-		}, 3000);
-
-		// Start animation
-		animate();
+		startAnimation();
 	</script>
 </body>
 

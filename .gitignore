@@ -44,3 +44,39 @@ venv/
 
 # Pretrained models (should be downloaded, not committed)
 pretrained/
+
+# Personal files & notes
+*.md
+!README.md
+emails_to_archive.md
+actions_and_notes.md
+keep_updated_on_these_topics.md
+preferences.md
+plan.md
+fv.md
+example.md
+GEMINI.md
+read-here.md
+carson_response.md
+
+# Scripts & workers
+*_worker.py
+list_messages.py
+message_utils.py
+morning_brief.py
+manual_contacts.json
+
+# Test files
+test_download.wav
+*copy.wav
+simple_view.html
+index_backup.html
+dance_duo.html
+
+# Grant/archive folders
+reachy_grant/
+archive/
+
+# IDE/Agent folders
+.agent/
+.claude/

@@ -363,13 +363,27 @@ class YouTubeDownloader:
 
         # Ensure homebrew bins are in PATH for JS runtime (deno/node) detection on Mac
         if sys.platform == "darwin":
-            # Add common homebrew paths if they exist
             extra_paths = ["/opt/homebrew/bin", "/usr/local/bin"]
             current_path = os.environ.get("PATH", "")
             for p in extra_paths:
                 if p not in current_path and os.path.isdir(p):
                     current_path = f"{p}:{current_path}"
             os.environ["PATH"] = current_path
+
+        # Explicitly find deno/node paths for js_runtimes
+        import shutil
+        deno_path = shutil.which("deno")
+        node_path = shutil.which("node")
+        
+        # Fallback for Mac dev environment if shutil.which fails due to PATH issues
+        if not deno_path and sys.platform == "darwin" and os.path.exists("/opt/homebrew/bin/deno"):
+            deno_path = "/opt/homebrew/bin/deno"
+        
+        js_runtimes = {}
+        if deno_path:
+            js_runtimes["deno"] = {"executable": deno_path}
+        if node_path:
+            js_runtimes["node"] = {"executable": node_path}
 
         try:
             import yt_dlp  # type: ignore
@@ -422,15 +436,21 @@ class YouTubeDownloader:
             "noprogress": True,
             "logger": UTF8Logger(),
             # Fix for 403 Forbidden and JS runtime issues
-            "js_runtimes": {r: {} for r in ["deno", "node"] if shutil.which(r)},
-            "remote_components": "ejs:github",  # Solve JS challenges
-            "allow_unplayable_formats": False,  # Changed back to False to avoid clutter
+            "js_runtimes": js_runtimes,
+            "remote_components": ["ejs:github"],  # Solve JS challenges (must be a list)
+            "allow_unplayable_formats": False,
             # Fix encoding issues with Unicode characters in titles
             "restrictfilenames": True,  # Replace special chars with underscores
             "windowsfilenames": True,  # Additional filename sanitization
             # Legacy compat options for better encoding handling
             "compat_opts": ["no-live-chat"],
-            "postprocessors": [],
+            "postprocessors": [
+                {
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": "wav",
+                    "preferredquality": "192",
+                }
+            ],
             "postprocessor_args": {},
         }
 
@@ -468,26 +488,30 @@ class YouTubeDownloader:
                 ydl.download([download_target])
 
                 # yt-dlp might download various formats without conversion
-                # We search for any file containing the video ID
-                audio_files = list(self.download_dir.glob(f"*[{video_id}]*"))
+                # We use the actual filename from yt-dlp info and check if it exists
+                # Or find the file that exactly matches the video ID in its name
+                video_id = str(info.get("id", "Unknown"))
+                
+                # Look for the file literally. We search all files and find one that contains [ID]
+                # but we do it as a string check, not a glob check to avoid [] being treated as a set
+                audio_files = []
+                for f in self.download_dir.glob("*"):
+                    if f"[{video_id}]" in f.name:
+                        audio_files.append(f)
+                
+                # Filter by valid audio extensions
                 audio_files = [
                     f
                     for f in audio_files
-                    if f.suffix in [".wav", ".mp3", ".webm", ".m4a", ".flac", ".opus"]
+                    if f.suffix.lower() in [".wav", ".mp3", ".webm", ".m4a", ".flac", ".opus"]
                 ]
-                
-                if not audio_files:
-                     # Fallback to any recent audio file if specific ID match fails
-                    audio_files = list(self.download_dir.glob("*"))
-                    audio_files = [
-                        f
-                        for f in audio_files
-                        if f.suffix in [".wav", ".mp3", ".webm", ".m4a", ".flac", ".opus"]
-                    ]
 
                 if audio_files:
+                    # Sort by modification time to get the freshest one
                     audio_files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
                     return str(audio_files[0])
+                
+                logger.error(f"[YouTubeDownloader] Could not find downloaded file for ID: {video_id}")
 
         except UnicodeEncodeError as e:
             logger.error(f"[ConnectedChoreographer] Encoding error: {e}")

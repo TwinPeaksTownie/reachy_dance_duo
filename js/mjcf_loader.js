@@ -14,7 +14,7 @@ export class MJCFLoader {
         this.manager = manager || THREE.DefaultLoadingManager;
         this.stlLoader = new STLLoader(this.manager);
         this.gltfLoader = new GLTFLoader(this.manager);
-        this.meshPath = 'assets/meshes_optimized/';
+        this.meshPath = 'assets/';
     }
 
     load(url, onLoad, onProgress, onError) {

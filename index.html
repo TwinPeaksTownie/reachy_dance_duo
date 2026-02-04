@@ -362,61 +362,14 @@
 		fillLight.position.set(-5, 5, 5);
 		scene.add(fillLight);
 
-		// --- DEEP LOOP VISUALIZER ---
-		const columns = 96;
-		const panelsTurn = 32;
-		const panelsLeg = 32;
-		const turnRadius = 25;
-		const legLength = 80;
-		const turnCenterZ = -50;
 
-		const visualizerGroup = new THREE.Group();
-		scene.add(visualizerGroup);
-		const blocks = [];
-		const panelGeometry = new THREE.PlaneGeometry(2.4, 1.25);
+		// --- 3D TITLE CARD SYSTEM (Hero Visuals) ---
+		const svgSystem = new SVG3DSystem(scene);
+		svgSystem.load('assets/dance_duo.svg');
 
-		for (let col = 0; col < columns; col++) {
-			const columnBlocks = [];
-			let x, z, rotY;
+		// Floating Notes
+		const noteSystem = new MusicNoteSystem(scene);
 
-			if (col < panelsLeg) {
-				x = -turnRadius;
-				const legProgress = (panelsLeg - 1 - col) / panelsLeg;
-				z = turnCenterZ + legProgress * legLength;
-				rotY = Math.PI / 2;
-			} else if (col < panelsLeg + panelsTurn) {
-				const turnCol = col - panelsLeg;
-				const pct = turnCol / (panelsTurn - 1);
-				const angle = Math.PI * (1 - pct);
-				x = turnRadius * Math.cos(angle);
-				z = turnCenterZ - turnRadius * Math.sin(angle);
-				rotY = angle - Math.PI / 2;
-			} else {
-				const rightCol = col - (panelsLeg + panelsTurn);
-				const legProgress = rightCol / panelsLeg;
-				x = turnRadius;
-				z = turnCenterZ + legProgress * legLength;
-				rotY = -Math.PI / 2;
-			}
-
-			for (let row = 0; row < 12; row++) {
-				const material = new THREE.MeshStandardMaterial({
-					color: 0x111111,
-					emissive: 0x000000,
-					transparent: true,
-					opacity: 0.05,
-					side: THREE.FrontSide
-				});
-				const block = new THREE.Mesh(panelGeometry, material);
-				block.position.set(x, (row - 6) * 1.28, z);
-				block.rotation.y = rotY;
-				visualizerGroup.add(block);
-				columnBlocks.push({ mesh: block, material: material });
-			}
-			blocks.push(columnBlocks);
-		}
-		visualizerGroup.scale.set(0.2, 0.2, 0.2);
-		visualizerGroup.position.set(0, 0, -5);
 
 		// --- AUDIO SYSTEM ---
 		const audio = document.getElementById('dance-audio');
@@ -453,16 +406,10 @@
 
 		let danceData = null;
 		let startTime = 0;
-		let noteSystem, svgSystem;
-		const rowPeaks = Array(12).fill(0).map(() => ({ left: 40.5, right: 54.5 }));
+
 
 		async function startAnimation() {
 			try {
-				noteSystem = new MusicNoteSystem(scene);
-				svgSystem = new SVG3DSystem(scene);
-				// Use a dummy SVG path or correctly link to assets
-				svgSystem.load('assets/dance_duo.svg');
-
 				const [danceRes] = await Promise.all([
 					fetch('dance_data.json'),
 					leftRobot.load('reachy_mini.xml'),
@@ -508,38 +455,6 @@
 
 			if (noteSystem) noteSystem.update(0.016);
 			if (svgSystem) svgSystem.update(0.016);
-
-			// Deep Loop Update
-			const mapping = [11, 9, 7, 5, 3, 1, 0, 2, 4, 6, 8, 10];
-			const centerCol = 47.5;
-			const maxHalfWidth = 48;
-
-			for (let r = 0; r < 12; r++) {
-				const vol = bandVolumes[mapping[r]] || 0;
-				const halfW = 7 + (vol * 41);
-				const start = Math.floor(centerCol - halfW);
-				const end = Math.ceil(centerCol + halfW);
-
-				if (rowPeaks[r].left > start) rowPeaks[r].left -= 1.0;
-				else rowPeaks[r].left = start;
-				if (rowPeaks[r].right < end) rowPeaks[r].right += 1.0;
-				else rowPeaks[r].right = end;
-
-				for (let c = 0; c < columns; c++) {
-					const blockData = blocks[c][r];
-					let isLit = (c >= start && c <= end);
-					let isLeader = (c === Math.floor(rowPeaks[r].left) || c === Math.floor(rowPeaks[r].right));
-
-					if (isLit || isLeader) {
-						blockData.material.opacity = 0.9;
-						blockData.material.emissive.copy(getRainbowColor((c - start) / (end - start || 1)));
-						blockData.material.emissiveIntensity = isLeader ? 0.95 : 0.8;
-					} else {
-						blockData.material.opacity = 0.05;
-						blockData.material.emissiveIntensity = 0;
-					}
-				}
-			}
 
 			composer.render();
 		}

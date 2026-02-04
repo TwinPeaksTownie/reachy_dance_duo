@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { MJCFLoader } from './MJCFLoader.js';
+import { MJCFLoader } from './mjcf_loader.js';
 import { calculateActiveMotorAngles, calculatePassiveJoints, buildHeadPoseMatrix } from './reachy_kinematics.js';
 
 export class ReachyRobot {

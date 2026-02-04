@@ -427,10 +427,11 @@
 		visualizerGroup.scale.set(0.2, 0.2, 0.2);
 		visualizerGroup.position.set(0, 0, -5);
 
-		// Row peaks for smooth animation
-		const rowPeaks = Array.from({ length: 12 }, () => ({ left: 48, right: 48 }));
-		const centerCol = 48;
-		const mapping = [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+		// Row peaks for smooth animation (start with initial spread)
+		const rowPeaks = Array.from({ length: 12 }, () => ({ left: 40.5, right: 54.5 }));
+		const centerCol = 47.5;
+		// Symmetric mapping - outer edges share frequencies for mirror effect
+		const mapping = [11, 9, 7, 5, 3, 1, 0, 2, 4, 6, 8, 10];
 
 		// --- AUDIO SYSTEM ---
 		const audio = document.getElementById('dance-audio');
@@ -510,38 +511,54 @@
 			const bandVolumes = new Array(12).fill(0);
 			if (audioStarted && analyser) {
 				analyser.getByteFrequencyData(dataArray);
+
+				// Volume compensation - adjust for audio volume slider
+				const vol = Math.max(audio.volume, 0.05);
+				const compensation = 1.0 / vol;
+
 				const binSize = Math.floor(dataArray.length / 12);
 				for (let r = 0; r < 12; r++) {
 					let sum = 0;
 					for (let i = 0; i < binSize; i++) sum += dataArray[r * binSize + i];
-					bandVolumes[r] = Math.min((sum / binSize / 255) * 5.0, 1.0);
+					let rawVal = (sum / binSize) / 255;
+					bandVolumes[r] = Math.min(rawVal * compensation, 1.0);
 				}
+
+				// Bass dampening - prevent bass from overpowering
+				bandVolumes[0] *= 0.6;
+				bandVolumes[1] *= 0.7;
+				bandVolumes[2] *= 0.8;
 			}
 
 			// Update rainbow blocks
 			for (let r = 0; r < 12; r++) {
-				const vol = bandVolumes[mapping[r]] || 0;
-				const halfW = 7 + (vol * 41);
+				const rowVol = bandVolumes[mapping[r]] || 0;
+				const halfW = 7 + (rowVol * 41);
 				const start = Math.floor(centerCol - halfW);
 				const end = Math.ceil(centerCol + halfW);
 
+				// Smooth peak tracking
 				if (rowPeaks[r].left > start) rowPeaks[r].left -= 1.0;
-				else rowPeaks[r].left = start;
+				if (rowPeaks[r].left < start) rowPeaks[r].left = start;
 				if (rowPeaks[r].right < end) rowPeaks[r].right += 1.0;
-				else rowPeaks[r].right = end;
+				if (rowPeaks[r].right > end) rowPeaks[r].right = end;
 
 				for (let c = 0; c < columns; c++) {
 					const blockData = blocks[c][r];
 					let isLit = (c >= start && c <= end);
 					let isLeader = (c === Math.floor(rowPeaks[r].left) || c === Math.floor(rowPeaks[r].right));
+					const colorScalar = (c - start) / (end - start || 1);
 
 					if (isLit || isLeader) {
 						blockData.material.opacity = 0.9;
-						blockData.material.emissive.copy(getRainbowColor((c - start) / (end - start || 1)));
-						blockData.material.emissiveIntensity = isLeader ? 0.95 : 0.8;
+						blockData.material.emissive.copy(getRainbowColor(colorScalar));
+						// Dynamic intensity based on volume, capped below bloom threshold
+						const rawIntensity = 0.8 + (rowVol * 0.5);
+						blockData.material.emissiveIntensity = isLeader ? 0.95 : Math.min(rawIntensity, 0.9);
 					} else {
 						blockData.material.opacity = 0.05;
 						blockData.material.emissiveIntensity = 0;
+						blockData.material.emissive.setHex(0x000000);
 					}
 				}
 			}

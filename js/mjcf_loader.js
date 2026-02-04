@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 /**
  * MJCF (MuJoCo XML) Parser & Loader
@@ -12,7 +13,8 @@ export class MJCFLoader {
     constructor(manager) {
         this.manager = manager || THREE.DefaultLoadingManager;
         this.stlLoader = new STLLoader(this.manager);
-        this.meshPath = 'assets/meshes_optimized/'; // Use optimized GLB meshes
+        this.gltfLoader = new GLTFLoader(this.manager);
+        this.meshPath = 'assets/meshes_optimized/';
     }
 
     load(url, onLoad, onProgress, onError) {
@@ -147,133 +149,161 @@ export class MJCFLoader {
         }
     }
 
-    loadGeomMesh(meshName, parent3D, geomNode) {
-        return new Promise((resolve) => {
-            // Resolve filename from assets map
-            let filename = this.meshes[meshName];
-            if (!filename) filename = meshName + ".stl";
+    createMaterialForMesh(meshName, geomNode) {
+        let color = 0xffffff;
+        let emissive = 0x333333;
+        let roughness = 0.1;
+        let metalness = 0.0;
 
-            const url = `${this.meshPath}${filename}`;
+        const matName = geomNode.getAttribute('material') || '';
+        const meshNameLower = meshName.toLowerCase();
+        const matNameLower = matName.toLowerCase();
 
-            this.stlLoader.load(url,
-                (geometry) => {
-                    // HEURISTIC MATERIAL MAPPING
-                    // Default to Glossy White for Body
-                    let color = 0xffffff;
-                    let emissive = 0x333333;
-                    let roughness = 0.1; // GLOSSY
-                    let metalness = 0.0; // PLASTIC
+        const isDark =
+            matNameLower.includes('black') ||
+            matNameLower.includes('dark') ||
+            matNameLower.includes('antenna_material') ||
+            matNameLower.includes('cap') ||
+            matNameLower.includes('speaker') ||
+            meshNameLower.includes('arducam') ||
+            meshNameLower.includes('foot') ||
+            meshNameLower.includes('bearing');
 
-                    const matName = geomNode.getAttribute('material') || '';
-                    const meshNameLower = meshName.toLowerCase();
-                    const matNameLower = matName.toLowerCase();
+        const isSilver =
+            meshNameLower.includes('stewart') ||
+            meshNameLower.includes('rod') ||
+            meshNameLower.includes('link') ||
+            meshNameLower.includes('arm');
 
-                    // IDENTIFY DARK PARTS (Base, Tech, Camera, Caps)
-                    const isDark =
-                        matNameLower.includes('black') ||
-                        matNameLower.includes('dark') ||
-                        matNameLower.includes('antenna_material') ||
-                        matNameLower.includes('cap') ||
-                        matNameLower.includes('speaker') ||
-                        meshNameLower.includes('arducam') ||  // Camera
-                        meshNameLower.includes('foot') ||     // Base/Foot
-                        meshNameLower.includes('bearing');    // Mechanical bits
+        const isAntenna = meshNameLower.includes('horn') || meshNameLower === 'antenna';
+        const isGlass = meshNameLower.includes('lens') && !meshNameLower.includes('cap');
+        const isHolder =
+            meshNameLower.includes('cap') ||
+            meshNameLower.includes('carter') ||
+            meshNameLower.includes('arducam') ||
+            meshNameLower.includes('glasses');
 
-                    // IDENTIFY GREY/SILVER PARTS (Actuators, rods)
-                    const isSilver =
-                        meshNameLower.includes('stewart') ||
-                        meshNameLower.includes('rod') ||
-                        meshNameLower.includes('link') ||
-                        meshNameLower.includes('arm');
+        if (isDark) {
+            color = 0x111111;
+            emissive = 0x000000;
+            roughness = 0.8;
+            metalness = 0.1;
+        }
+        else if (isSilver) {
+            color = 0xaaaaaa;
+            emissive = 0x111111;
+            roughness = 0.2;
+            metalness = 1.0;
+        }
+        else if (matNameLower.includes('blue')) {
+            color = 0x0088ff;
+            emissive = 0x002266;
+        }
 
-                    // IDENTIFY GLOWING PARTS (Antennae/Horns)
-                    // Strict match for 'antenna' mesh to avoid coloring 'antenna_body' or 'antenna_holder'
-                    const isAntenna = meshNameLower.includes('horn') || meshNameLower === 'antenna';
+        if (isAntenna) {
+            color = 0x111111;
+            emissive = 0xffffff;
+            roughness = 0.6;
+            metalness = 0.1;
+        }
 
-                    // IDENTIFY REFLECTIVE PARTS (Eyes/Lens)
-                    // "Lens" matches 'lens_cap' too, so we must separate distinct glass from plastic caps.
-                    const isGlass = meshNameLower.includes('lens') && !meshNameLower.includes('cap');
+        if (isGlass) {
+            color = 0x000000;
+            emissive = 0x000000;
+            roughness = 0.0;
+            metalness = 0.0;
+        }
 
-                    // IDENTIFY MATTE HOLDERS (Caps, ArduCam, Carter, Glasses Holder)
-                    const isHolder =
-                        meshNameLower.includes('cap') ||
-                        meshNameLower.includes('carter') ||
-                        meshNameLower.includes('arducam') ||
-                        meshNameLower.includes('glasses');
+        if (isHolder) {
+            color = 0x111111;
+            emissive = 0x000000;
+            roughness = 0.9;
+            metalness = 0.1;
+        }
 
-                    if (isDark) {
-                        color = 0x111111;
-                        emissive = 0x000000;
-                        roughness = 0.8; // Matte
-                        metalness = 0.1;
+        const emissiveIntensity = isAntenna ? 0.01 : (isDark ? 0.0 : (isSilver ? 0.2 : 0.3));
+
+        return new THREE.MeshStandardMaterial({
+            color: color,
+            roughness: roughness,
+            metalness: metalness,
+            emissive: emissive,
+            emissiveIntensity: emissiveIntensity
+        });
+    }
+
+    applyTransform(mesh, geomNode) {
+        if (geomNode.hasAttribute('pos')) {
+            const pos = geomNode.getAttribute('pos').trim().split(/\s+/).map(Number);
+            mesh.position.set(pos[0], pos[1], pos[2]);
+        }
+        if (geomNode.hasAttribute('quat')) {
+            const quat = geomNode.getAttribute('quat').trim().split(/\s+/).map(Number);
+            mesh.quaternion.set(quat[1], quat[2], quat[3], quat[0]);
+        }
+    }
+
+    loadGLB(url, material, parent3D, geomNode, resolve) {
+        this.gltfLoader.load(
+            url,
+            (gltf) => {
+                let geometry = null;
+                gltf.scene.traverse((child) => {
+                    if (child.isMesh && !geometry) {
+                        geometry = child.geometry;
                     }
-                    else if (isSilver) {
-                        color = 0xaaaaaa; // Light Grey for Silver
-                        emissive = 0x111111;
-                        roughness = 0.2; // Shiny
-                        metalness = 1.0; // Metallic
-                    }
-                    else if (matNameLower.includes('blue')) {
-                        color = 0x0088ff;
-                        emissive = 0x002266;
-                    }
+                });
 
-                    // OVERRIDES
-                    if (isAntenna) {
-                        // Explicit Override: Force Black Base + Faint White Glow
-                        // This matches original hardware (Black) but adds glow for visibility against darkness.
-                        color = 0x111111; // Black Base
-                        emissive = 0xffffff;
-                        roughness = 0.6; // Matte
-                        metalness = 0.1;
-                    }
-
-                    if (isGlass) {
-                        // Really Reflective Lenses (Big/Small/Fisheye)
-                        // DIELECTRIC BLACK creates sharp white highlights on black body
-                        color = 0x000000;
-                        emissive = 0x000000;
-                        roughness = 0.0; // Perfect Mirror Sharpness
-                        metalness = 0.0; // Plastic/Glass (Not Metal)
-                    }
-
-                    if (isHolder) {
-                        // Matte Textured Plastic (Caps, Camera Holder)
-                        color = 0x111111; // Dark Grey/Black
-                        emissive = 0x000000;
-                        roughness = 0.9; // Very Matte (Textured look)
-                        metalness = 0.1; // Plastic
-                    }
-
-                    const material = new THREE.MeshStandardMaterial({
-                        color: color,
-                        roughness: roughness,
-                        metalness: metalness,
-                        emissive: emissive,
-                        emissiveIntensity: (isAntenna) ? 0.01 : ((isDark) ? 0.0 : ((isSilver) ? 0.2 : 0.3))
-                    });
-
-
+                if (geometry) {
                     const mesh = new THREE.Mesh(geometry, material);
-
-                    if (geomNode.hasAttribute('pos')) {
-                        const pos = geomNode.getAttribute('pos').trim().split(/\s+/).map(Number);
-                        mesh.position.set(pos[0], pos[1], pos[2]);
-                    }
-                    if (geomNode.hasAttribute('quat')) {
-                        const quat = geomNode.getAttribute('quat').trim().split(/\s+/).map(Number);
-                        mesh.quaternion.set(quat[1], quat[2], quat[3], quat[0]);
-                    }
-
+                    this.applyTransform(mesh, geomNode);
                     parent3D.add(mesh);
                     resolve();
-                },
-                undefined,
-                (err) => {
-                    console.warn(`Could not load mesh: ${url}`, err);
+                } else {
+                    console.warn(`No geometry found in GLB: ${url}`);
                     resolve();
                 }
-            );
+            },
+            undefined,
+            (err) => {
+                console.error(`GLTFLoader failed for ${url}:`, err);
+                resolve();
+            }
+        );
+    }
+
+    loadSTL(url, material, parent3D, geomNode, resolve) {
+        this.stlLoader.load(
+            url,
+            (geometry) => {
+                const mesh = new THREE.Mesh(geometry, material);
+                this.applyTransform(mesh, geomNode);
+                parent3D.add(mesh);
+                resolve();
+            },
+            undefined,
+            (err) => {
+                console.warn(`STLLoader failed for ${url}:`, err);
+                resolve();
+            }
+        );
+    }
+
+    loadGeomMesh(meshName, parent3D, geomNode) {
+        return new Promise((resolve) => {
+            let filename = this.meshes[meshName];
+            if (!filename) filename = meshName + ".glb";
+
+            const url = `${this.meshPath}${filename}`;
+            const ext = filename.split('.').pop().toLowerCase();
+
+            const material = this.createMaterialForMesh(meshName, geomNode);
+
+            if (ext === 'glb' || ext === 'gltf') {
+                this.loadGLB(url, material, parent3D, geomNode, resolve);
+            } else {
+                this.loadSTL(url, material, parent3D, geomNode, resolve);
+            }
         });
     }
 }

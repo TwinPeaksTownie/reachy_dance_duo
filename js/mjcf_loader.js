@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 /**
  * MJCF (MuJoCo XML) Parser & Loader
@@ -14,6 +15,12 @@ export class MJCFLoader {
         this.manager = manager || THREE.DefaultLoadingManager;
         this.stlLoader = new STLLoader(this.manager);
         this.gltfLoader = new GLTFLoader(this.manager);
+
+        // Configure Draco loader for compressed GLB files
+        this.dracoLoader = new DRACOLoader();
+        this.dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+        this.gltfLoader.setDRACOLoader(this.dracoLoader);
+
         this.meshPath = 'assets/';
     }
 

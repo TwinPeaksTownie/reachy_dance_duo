@@ -371,6 +371,67 @@
 		const noteSystem = new MusicNoteSystem(scene);
 
 
+		// --- RAINBOW VISUALIZER (Deep Loop) ---
+		const columns = 96;
+		const panelsTurn = 32;
+		const panelsLeg = 32;
+		const turnRadius = 25;
+		const legLength = 80;
+		const turnCenterZ = -50;
+
+		const visualizerGroup = new THREE.Group();
+		scene.add(visualizerGroup);
+		const blocks = [];
+		const panelGeometry = new THREE.PlaneGeometry(2.4, 1.25);
+
+		for (let col = 0; col < columns; col++) {
+			const columnBlocks = [];
+			let x, z, rotY;
+
+			if (col < panelsLeg) {
+				x = -turnRadius;
+				const legProgress = (panelsLeg - 1 - col) / panelsLeg;
+				z = turnCenterZ + legProgress * legLength;
+				rotY = Math.PI / 2;
+			} else if (col < panelsLeg + panelsTurn) {
+				const turnCol = col - panelsLeg;
+				const pct = turnCol / (panelsTurn - 1);
+				const angle = Math.PI * (1 - pct);
+				x = turnRadius * Math.cos(angle);
+				z = turnCenterZ - turnRadius * Math.sin(angle);
+				rotY = angle - Math.PI / 2;
+			} else {
+				const rightCol = col - (panelsLeg + panelsTurn);
+				const legProgress = rightCol / panelsLeg;
+				x = turnRadius;
+				z = turnCenterZ + legProgress * legLength;
+				rotY = -Math.PI / 2;
+			}
+
+			for (let row = 0; row < 12; row++) {
+				const material = new THREE.MeshStandardMaterial({
+					color: 0x111111,
+					emissive: 0x000000,
+					transparent: true,
+					opacity: 0.05,
+					side: THREE.FrontSide
+				});
+				const block = new THREE.Mesh(panelGeometry, material);
+				block.position.set(x, (row - 6) * 1.28, z);
+				block.rotation.y = rotY;
+				visualizerGroup.add(block);
+				columnBlocks.push({ mesh: block, material: material });
+			}
+			blocks.push(columnBlocks);
+		}
+		visualizerGroup.scale.set(0.2, 0.2, 0.2);
+		visualizerGroup.position.set(0, 0, -5);
+
+		// Row peaks for smooth animation
+		const rowPeaks = Array.from({ length: 12 }, () => ({ left: 48, right: 48 }));
+		const centerCol = 48;
+		const mapping = [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+
 		// --- AUDIO SYSTEM ---
 		const audio = document.getElementById('dance-audio');
 		const toggleBtn = document.getElementById('toggleAudio');
@@ -416,6 +477,10 @@
 					rightRobot.load('reachy_mini.xml')
 				]);
 
+				// Add robots to scene after loading
+				scene.add(leftRobot.group);
+				scene.add(rightRobot.group);
+
 				const data = await danceRes.json();
 				danceData = data.frames || data;
 
@@ -441,7 +506,7 @@
 				rightRobot.applyPose(frame);
 			}
 
-			// Visualizer Logic
+			// Visualizer Logic - Rainbow Blocks
 			const bandVolumes = new Array(12).fill(0);
 			if (audioStarted && analyser) {
 				analyser.getByteFrequencyData(dataArray);
@@ -450,6 +515,34 @@
 					let sum = 0;
 					for (let i = 0; i < binSize; i++) sum += dataArray[r * binSize + i];
 					bandVolumes[r] = Math.min((sum / binSize / 255) * 5.0, 1.0);
+				}
+			}
+
+			// Update rainbow blocks
+			for (let r = 0; r < 12; r++) {
+				const vol = bandVolumes[mapping[r]] || 0;
+				const halfW = 7 + (vol * 41);
+				const start = Math.floor(centerCol - halfW);
+				const end = Math.ceil(centerCol + halfW);
+
+				if (rowPeaks[r].left > start) rowPeaks[r].left -= 1.0;
+				else rowPeaks[r].left = start;
+				if (rowPeaks[r].right < end) rowPeaks[r].right += 1.0;
+				else rowPeaks[r].right = end;
+
+				for (let c = 0; c < columns; c++) {
+					const blockData = blocks[c][r];
+					let isLit = (c >= start && c <= end);
+					let isLeader = (c === Math.floor(rowPeaks[r].left) || c === Math.floor(rowPeaks[r].right));
+
+					if (isLit || isLeader) {
+						blockData.material.opacity = 0.9;
+						blockData.material.emissive.copy(getRainbowColor((c - start) / (end - start || 1)));
+						blockData.material.emissiveIntensity = isLeader ? 0.95 : 0.8;
+					} else {
+						blockData.material.opacity = 0.05;
+						blockData.material.emissiveIntensity = 0;
+					}
 				}
 			}
 

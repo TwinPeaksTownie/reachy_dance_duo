@@ -521,7 +521,8 @@
 					let sum = 0;
 					for (let i = 0; i < binSize; i++) sum += dataArray[r * binSize + i];
 					let rawVal = (sum / binSize) / 255;
-					bandVolumes[r] = Math.min(rawVal * compensation, 1.0);
+					// Boost signal 5x then apply volume compensation
+					bandVolumes[r] = Math.min(rawVal * 5.0 * compensation, 1.0);
 				}
 
 				// Bass dampening - prevent bass from overpowering

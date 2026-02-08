@@ -243,6 +243,202 @@
 				font-size: 1.1rem;
 			}
 		}
+
+		/* --- REPLACED EDITOR UI STYLES --- */
+		#builder-panel {
+			position: absolute;
+			top: 20px;
+			right: 20px;
+			width: 220px;
+			background: rgba(0, 20, 20, 0.9);
+			border: 1px solid #0ff;
+			color: #0ff;
+			padding: 15px;
+			border-radius: 8px;
+			font-family: 'Outfit', sans-serif;
+			box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+			z-index: 1001;
+		}
+
+		#builder-panel.hidden {
+			display: none;
+		}
+
+		#builder-panel h3 {
+			margin-top: 0;
+			color: #fff;
+			text-transform: uppercase;
+			font-size: 0.9em;
+			border-bottom: 1px solid #0ff;
+			padding-bottom: 5px;
+		}
+
+		.coord-row {
+			display: flex;
+			justify-content: space-between;
+			margin: 5px 0;
+			align-items: center;
+		}
+
+		.coord-divider {
+			border-bottom: 1px solid #444;
+			margin: 10px 0 5px;
+			font-size: 0.8em;
+			color: #888;
+		}
+
+		.slide-row label {
+			width: 20px;
+		}
+
+		.slide-row input {
+			width: 70px;
+			margin: 0 2px;
+		}
+
+		.slide-val {
+			font-size: 0.8em;
+			color: #fff;
+			width: 35px;
+			text-align: right;
+		}
+
+		.nudge-btn {
+			width: 24px;
+			height: 24px;
+			border: 1px solid #0ff;
+			background: rgba(0, 40, 40, 0.5);
+			color: #0ff;
+			cursor: pointer;
+			font-size: 16px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 4px;
+		}
+
+		.nudge-btn:hover {
+			background: #0ff;
+			color: #000;
+		}
+
+		.tools-row {
+			display: flex;
+			gap: 5px;
+			margin: 10px 0;
+		}
+
+		.tool-btn {
+			flex: 1;
+			background: #222;
+			border: 1px solid #0ff;
+			color: #0ff;
+			cursor: pointer;
+			padding: 6px;
+			font-size: 0.8em;
+		}
+
+		.tool-btn.active {
+			background: #0ff;
+			color: #000;
+		}
+
+		.action-btn {
+			width: 100%;
+			background: #0ff;
+			color: #000;
+			border: none;
+			padding: 10px;
+			cursor: pointer;
+			font-weight: bold;
+			margin-top: 5px;
+			text-transform: uppercase;
+			font-size: 0.8rem;
+		}
+
+		.action-btn:hover {
+			background: #fff;
+		}
+
+		.action-btn.secondary {
+			background: transparent;
+			border: 1px solid #0ff;
+			color: #0ff;
+		}
+
+		#btn-builder-toggle {
+			position: fixed;
+			bottom: 30px;
+			right: 30px;
+			background: rgba(0, 0, 0, 0.7);
+			border: 1px solid #0ff;
+			border-radius: 50%;
+			width: 50px;
+			height: 50px;
+			font-size: 24px;
+			cursor: pointer;
+			z-index: 1000;
+			transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+			color: #0ff;
+		}
+
+		#btn-builder-toggle:hover {
+			background: #0ff;
+			color: #000;
+			box-shadow: 0 0 25px #0ff;
+			transform: scale(1.15) rotate(15deg);
+		}
+
+		#svg-panel {
+			position: absolute;
+			top: 20px;
+			right: 20px;
+			width: 280px;
+			background: rgba(0, 0, 0, 0.85);
+			backdrop-filter: blur(12px);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			border-radius: 12px;
+			padding: 20px;
+			color: white;
+			font-family: 'Outfit', sans-serif;
+			z-index: 1002;
+			box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+		}
+
+		#svg-panel h3 {
+			margin: 0 0 15px 0;
+			font-size: 14px;
+			text-transform: uppercase;
+			letter-spacing: 2px;
+			color: #FF9900;
+		}
+
+		.control-group {
+			margin-bottom: 14px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+
+		.control-group label {
+			font-size: 12px;
+			color: #bbb;
+			font-weight: 500;
+		}
+
+		.control-group input[type="range"] {
+			width: 60%;
+			accent-color: #FF9900;
+		}
+
+		.control-group input[type="color"] {
+			border: 1px solid #444;
+			width: 45px;
+			height: 28px;
+			background: #222;
+			cursor: pointer;
+			border-radius: 4px;
+		}
 	</style>
 </head>
 
@@ -250,6 +446,61 @@
 
 	<section class="hero">
 		<div id="visualizer-container"></div>
+
+		<!-- UI PANELS FOR AESTHETIC FINE-TUNING -->
+		<div id="builder-panel" class="hidden">
+			<h3>Placement Mode</h3>
+			<p>Selected: <span id="builder-target">None</span></p>
+			<div class="coord-row"><label>X:</label> <span id="val-x">0.00</span></div>
+			<div class="coord-row"><label>Y:</label> <span id="val-y">0.00</span></div>
+			<div class="coord-row"><label>Z:</label> <span id="val-z">0.00</span></div>
+			<div class="coord-divider">ROTATION (Deg)</div>
+			<div class="coord-row slide-row">
+				<label>X:</label>
+				<input type="range" id="rot-x" min="-180" max="180" step="1">
+				<span id="disp-rot-x" class="slide-val">0</span>
+			</div>
+			<div class="coord-row slide-row">
+				<label>Y:</label>
+				<input type="range" id="rot-y" min="-180" max="180" step="1">
+				<span id="disp-rot-y" class="slide-val">0</span>
+			</div>
+			<button id="btn-lock" class="action-btn">🔒 Lock Position</button>
+			<button id="btn-cancel" class="action-btn secondary">Cancel</button>
+			<div class="coord-divider">CAMERA POV</div>
+			<div class="coord-row"><label>Pos:</label> <span id="cam-pos">0, 0, 0</span></div>
+			<div class="coord-row"><label>Rot:</label> <span id="cam-rot">0, 0, 0</span></div>
+		</div>
+
+		<button id="btn-builder-toggle" title="Enter Placement Mode">🛠️</button>
+
+		<div id="svg-panel" style="display: none;">
+			<h3>Logo Editor</h3>
+			<div class="control-group"><label>Scale</label><input type="range" id="svg-scale" min="0.0005" max="0.005"
+					step="0.0001" value="0.0037"></div>
+			<div class="control-group"><label>Color</label><input type="color" id="svg-color" value="#f7cf02"></div>
+			<div class="control-group"><label>Glow</label><input type="range" id="svg-glow" min="0" max="5" step="0.1"
+					value="1.8"></div>
+			<div class="control-group"><label>Bloom Radius</label><input type="range" id="bloom-radius" min="0" max="2"
+					step="0.01" value="0.39"></div>
+			<div class="control-group"><label>Bloom Strength</label><input type="range" id="bloom-strength" min="0"
+					max="5" step="0.1" value="0.3"></div>
+			<div class="control-group"><label>Bloom Threshold</label><input type="range" id="bloom-threshold" min="0"
+					max="2.0" step="0.1" value="1.5"></div>
+			<div class="control-group"><label>Tilt</label><input type="range" id="svg-tilt" min="-0.2" max="0.2"
+					step="0.001" value="0.041"></div>
+			<div class="control-group"><label>Depth (Z)</label><input type="range" id="svg-z" min="-50" max="100"
+					step="0.1" value="-4.5"></div>
+			<div class="control-group"><label>Offset Y</label><input type="range" id="svg-y" min="0" max="3" step="0.1"
+					value="1.4"></div>
+			<div class="control-group"><label>Drift</label><input type="range" id="drift-speed" min="0" max="2"
+					step="0.1" value="0.4"></div>
+			<div class="control-group"><label>Beam Pos Y</label><input type="range" id="red-beam" min="0" max="1"
+					step="0.01" value="0.35"></div>
+			<div class="control-group"><label>Beam Feather</label><input type="range" id="beam-feather" min="0" max="1"
+					step="0.01" value="0.8"></div>
+			<button id="btn-save-svg" class="action-btn">💾 Save Config (Persistent)</button>
+		</div>
 
 		<div id="demo-controls">
 			<button id="toggleAudio" class="audio-toggle-btn">
@@ -338,9 +589,9 @@
 		// --- POST PROCESSING ---
 		const renderScene = new RenderPass(scene, camera);
 		const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-		bloomPass.threshold = 1.1;
-		bloomPass.strength = 1.5;
-		bloomPass.radius = 0.8;
+		bloomPass.threshold = 1.5; // Definitive threshold
+		bloomPass.strength = 0.3;  // Definitive strength
+		bloomPass.radius = 0.39;  // Definitive radius
 		const outputPass = new OutputPass();
 
 		const composer = new EffectComposer(renderer);
@@ -502,7 +753,7 @@
 				// APPLY ROBOT CONFIG FROM TEST2 (HARDCODED FOR STATIC)
 				leftRobot.group.position.set(-0.8786421648527453, -1.45, -1);
 				leftRobot.group.rotation.set(-1.5707963057214724, -1.0821041362364838, 0);
-				
+
 				rightRobot.group.position.set(0.8058102035783206, -1.45, -0.7084707284386818);
 				rightRobot.group.rotation.set(-1.5707963267948966, -2.0769418098732526, 0);
 
@@ -601,6 +852,73 @@
 			composer.setSize(window.innerWidth, window.innerHeight);
 		});
 
+		// --- SVG EDITOR LOGIC ---
+		function setupSVGEditor() {
+			const scaleInput = document.getElementById('svg-scale');
+			const colorInput = document.getElementById('svg-color');
+			const glowInput = document.getElementById('svg-glow');
+			const radiusInput = document.getElementById('bloom-radius');
+			const strengthInput = document.getElementById('bloom-strength');
+			const thresholdInput = document.getElementById('bloom-threshold');
+			const tiltInput = document.getElementById('svg-tilt');
+			const zInput = document.getElementById('svg-z');
+			const yInput = document.getElementById('svg-y');
+			const driftInput = document.getElementById('drift-speed');
+			const redBeamInput = document.getElementById('red-beam');
+			const beamFeatherInput = document.getElementById('beam-feather');
+			const saveBtn = document.getElementById('btn-save-svg');
+			const toggleBtn = document.getElementById('btn-builder-toggle');
+			const panel = document.getElementById('svg-panel');
+
+			toggleBtn.addEventListener('click', () => {
+				panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+			});
+
+			function updateSVG() {
+				if (!bloomPass) return;
+				bloomPass.radius = parseFloat(radiusInput.value);
+				bloomPass.strength = parseFloat(strengthInput.value);
+				bloomPass.threshold = parseFloat(thresholdInput.value);
+
+				if (!svgSystem || !svgSystem.loadedMesh || !svgSystem.config) return;
+
+				svgSystem.config.z = parseFloat(zInput.value);
+				svgSystem.config.y = parseFloat(yInput.value);
+				svgSystem.config.drift = parseFloat(driftInput.value);
+				svgSystem.config.redBeam = parseFloat(redBeamInput.value);
+				svgSystem.config.beamFeather = parseFloat(beamFeatherInput.value);
+
+				svgSystem.loadedMesh.scale.setScalar(parseFloat(scaleInput.value));
+				svgSystem.loadedMesh.rotation.z = parseFloat(tiltInput.value);
+
+				svgSystem.updateTexture(colorInput.value, svgSystem.config.redBeam, svgSystem.config.beamFeather);
+
+				const glow = parseFloat(glowInput.value);
+				svgSystem.loadedMesh.traverse(node => {
+					if (node.isPointLight) node.intensity = glow * 6;
+					if (node.isMesh && node.name === "CoreLetter") node.material.emissiveIntensity = glow;
+				});
+			}
+
+			[scaleInput, colorInput, glowInput, radiusInput, strengthInput, thresholdInput, tiltInput, zInput, yInput, driftInput, redBeamInput, beamFeatherInput].forEach(el => {
+				el.addEventListener('input', updateSVG);
+			});
+
+			saveBtn.addEventListener('click', () => {
+				const config = {
+					scale: scaleInput.value, color: colorInput.value, glow: glowInput.value,
+					radius: radiusInput.value, strength: strengthInput.value, threshold: thresholdInput.value,
+					tilt: tiltInput.value, z: zInput.value, y: yInput.value, drift: driftInput.value,
+					redBeam: redBeamInput.value, beamFeather: beamFeatherInput.value
+				};
+				localStorage.setItem('svgConfig', JSON.stringify(config));
+				alert("Aesthetic configuration saved!");
+			});
+
+			window.addEventListener('svg-loaded', () => setTimeout(updateSVG, 100));
+		}
+
+		setupSVGEditor();
 		startAnimation();
 	</script>
 </body>

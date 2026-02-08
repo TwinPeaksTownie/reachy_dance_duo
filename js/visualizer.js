@@ -145,7 +145,7 @@ export class SVG3DSystem {
         this.scene.add(this.group);
         this.floatTime = 0;
         // Default Config
-        this.config = { z: -2.0, y: 2.0, drift: 0.2, color: '#ffff00', redBeam: 0.5, beamFeather: 0.5 };
+        this.config = { z: -4.5, y: 1.4, drift: 0.4, color: '#f7cf02', redBeam: 0.35, beamFeather: 0.8 };
         this.loadedMesh = null;
     }
 

@@ -201,7 +201,7 @@ export class MJCFLoader {
 
         if (isWhiteHead) {
             color = 0xffffff;
-            emissive = 0x333333; // Soft glow
+            emissive = 0x555555; // Boosted for bloom (was 0x333333)
             roughness = 0.3;
             metalness = 0.0;
         }

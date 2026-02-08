@@ -545,8 +545,9 @@
 
 		const container = document.getElementById('visualizer-container');
 		const scene = new THREE.Scene();
+
 		const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-		camera.position.set(0.06650214614867994, -0.5509992498139562, 3.885498842512818);
+		camera.position.set(-0.04, -0.62, 3.95);
 
 		const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 		renderer.setSize(window.innerWidth, window.innerHeight);
@@ -568,7 +569,7 @@
 		composer.addPass(outputPass);
 
 		const controls = new OrbitControls(camera, renderer.domElement);
-		controls.target.set(0.22978033215455446, -0.23017558883193248, 0.0037882423081313974);
+		controls.target.set(0, -1.0, 0); // Center focus between robots
 		controls.update();
 
 		const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
@@ -642,10 +643,14 @@
 				scene.add(leftRobot.group);
 				scene.add(rightRobot.group);
 
-				leftRobot.group.position.set(-0.87, -1.45, -1);
-				leftRobot.group.rotation.set(-1.57, -1.08, 0);
+				// --- DEFINITIVE COORDINATES (From Screenshots) ---
+				// Left: Pos(-1.00, -1.45, -1.00), Rot(-90, 0, -45)
+				leftRobot.group.position.set(-1.00, -1.45, -1.00);
+				leftRobot.group.rotation.set(THREE.MathUtils.degToRad(-90), THREE.MathUtils.degToRad(0), THREE.MathUtils.degToRad(-45));
+
+				// Right: Pos(0.80, -1.45, -0.70), Rot(-90, 1, -135)
 				rightRobot.group.position.set(0.80, -1.45, -0.70);
-				rightRobot.group.rotation.set(-1.57, -2.07, 0);
+				rightRobot.group.rotation.set(THREE.MathUtils.degToRad(-90), THREE.MathUtils.degToRad(1), THREE.MathUtils.degToRad(-135));
 
 				danceData = (await danceRes.json()).frames || [];
 				startTime = performance.now();

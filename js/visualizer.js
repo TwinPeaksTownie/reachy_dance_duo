@@ -9,10 +9,10 @@ function createNoteTexture(type = 0) {
     canvas.width = 64;
     canvas.height = 64;
     const ctx = canvas.getContext('2d');
-    ctx.font = 'bold 48px Arial';
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#ffffff';
+    ctx.strokeText(type === 0 ? '♪' : '♫', 32, 32);
+    ctx.fillStyle = '#000000';
     ctx.fillText(type === 0 ? '♪' : '♫', 32, 32);
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
@@ -59,7 +59,7 @@ export class MusicNoteSystem {
                 transparent: true,
                 opacity: 0,
                 depthWrite: false,
-                blending: THREE.AdditiveBlending
+                blending: THREE.NormalBlending
             });
             const sprite = new THREE.Sprite(material);
             sprite.scale.set(0.5, 0.5, 0.5);

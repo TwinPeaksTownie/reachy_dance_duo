@@ -721,13 +721,13 @@
 				// Highs are roughly indexes 8-11
 				const highVol = (bandVolumes[9] + bandVolumes[10] + bandVolumes[11]) / 3;
 
-				if (highVol > 0.4 && Math.random() < 0.3) {
+				if (highVol > 0.4 && Math.random() < 0.15) {
 					const isLeft = Math.random() > 0.5;
 					const sourceRobot = isLeft ? leftRobot : rightRobot;
 					if (sourceRobot && sourceRobot.group) {
 						const spawnPos = sourceRobot.group.position.clone();
 						spawnPos.y += 0.4;
-						const color = getRainbowColor(Math.random());
+						const color = new THREE.Color(0xffffff); // Force White
 						noteSystem.spawn(spawnPos, color);
 					}
 				}

@@ -213,6 +213,29 @@
 			transform: scale(1.15) rotate(15deg);
 		}
 
+		#btn-robot-toggle {
+			position: fixed;
+			bottom: 90px;
+			right: 30px;
+			background: rgba(20, 0, 20, 0.7);
+			border: 1px solid #f0f;
+			border-radius: 50%;
+			width: 50px;
+			height: 50px;
+			font-size: 24px;
+			cursor: pointer;
+			z-index: 1000;
+			transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+			color: #f0f;
+		}
+
+		#btn-robot-toggle:hover {
+			background: #f0f;
+			color: #000;
+			box-shadow: 0 0 25px #f0f;
+			transform: scale(1.15);
+		}
+
 		#svg-panel {
 			position: absolute;
 			top: 20px;
@@ -353,7 +376,8 @@
 			<button id="btn-cancel" class="action-btn secondary">Close</button>
 		</div>
 
-		<button id="btn-builder-toggle" title="Enter Placement Mode">🛠️</button>
+		<button id="btn-builder-toggle" title="Logo Editor">🛠️</button>
+		<button id="btn-robot-toggle" title="Robot Placement">🤖</button>
 
 		<div id="svg-panel" style="display: none;">
 			<h3>Logo Editor</h3>
@@ -621,18 +645,11 @@
 			const readout = document.getElementById('svg-readout');
 			const toggleBtn = document.getElementById('btn-builder-toggle');
 			const panel = document.getElementById('svg-panel');
-			const builderBtn = document.getElementById('btn-lock');
-			const builderPanel = document.getElementById('builder-panel');
 
 			toggleBtn.addEventListener('click', () => {
 				panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-				builderPanel.classList.add('hidden');
+				document.getElementById('builder-panel').classList.add('hidden'); // Close other panel
 			});
-			builderBtn.addEventListener('click', () => {
-				builderPanel.classList.toggle('hidden');
-				panel.style.display = 'none';
-			});
-			document.getElementById('btn-cancel').addEventListener('click', () => builderPanel.classList.add('hidden'));
 
 			function updateSVG() {
 				bloomPass.radius = parseFloat(inputs.radius.value);
@@ -664,18 +681,84 @@
 				right: { obj: rightRobot, x: document.getElementById('r-pos-x'), y: document.getElementById('r-pos-y'), z: document.getElementById('r-pos-z'), rotY: document.getElementById('r-rot-y') }
 			};
 			const readout = document.getElementById('robot-readout');
-
-			// Grid & Snap Logic
-			const gridHelper = new THREE.GridHelper(20, 20, 0x00D1FF, 0x333333);
-			gridHelper.position.y = -2; // Floor level
-			gridHelper.visible = false;
-			scene.add(gridHelper);
-
+			const robotToggle = document.getElementById('btn-robot-toggle');
+			const builderPanel = document.getElementById('builder-panel');
 			const showGridCheck = document.getElementById('chk-show-grid');
 			const snapCheck = document.getElementById('chk-snap');
 			const snapStepInput = document.getElementById('snap-step');
 
-			if (showGridCheck) showGridCheck.addEventListener('change', (e) => gridHelper.visible = e.target.checked);
+			// Separate Toggle for Robot Panel
+			robotToggle.addEventListener('click', () => {
+				builderPanel.classList.toggle('hidden');
+				document.getElementById('svg-panel').style.display = 'none'; // Close other panel
+				// Enable edit mode visualizer if panel is open?
+			});
+			document.getElementById('btn-cancel').addEventListener('click', () => builderPanel.classList.add('hidden'));
+
+			// Dot Grid Logic
+			const points = [];
+			for (let x = -8; x <= 8; x += 0.5) {
+				for (let z = -12; z <= 5; z += 0.5) {
+					points.push(x, -1.5, z);
+				}
+			}
+			const dotGeometry = new THREE.BufferGeometry();
+			dotGeometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+			const dotMaterial = new THREE.PointsMaterial({ color: 0x00D1FF, size: 0.04 });
+			const dotGrid = new THREE.Points(dotGeometry, dotMaterial);
+			dotGrid.visible = false;
+			scene.add(dotGrid);
+
+			if (showGridCheck) showGridCheck.addEventListener('change', (e) => dotGrid.visible = e.target.checked);
+
+			// Selection Logic (Raycaster)
+			const raycaster = new THREE.Raycaster();
+			const mouse = new THREE.Vector2();
+			const selectionBox = new THREE.BoxHelper(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1)), 0x00FFFF);
+			selectionBox.visible = false;
+			scene.add(selectionBox);
+
+			window.addEventListener('click', (event) => {
+				if (builderPanel.classList.contains('hidden')) return;
+
+				// Calculate mouse position
+				mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+				mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+				raycaster.setFromCamera(mouse, camera);
+
+				// Check intersection with robot groups
+				// Note: complex because groups hold meshes. Simplify by checking distance?
+				// Or traverse meshes. For now, we cycle selection or check simple bounds.
+				// Simple approach: if click near center of robot.
+				// Better:
+				const intersects = raycaster.intersectObjects(scene.children, true);
+				let selected = null;
+				for (let i = 0; i < intersects.length; i++) {
+					// Check if object belongs to a robot
+					let p = intersects[i].object;
+					while (p.parent) {
+						if (p === leftRobot.group) { selected = 'left'; break; }
+						if (p === rightRobot.group) { selected = 'right'; break; }
+						p = p.parent;
+					}
+					if (selected) break;
+				}
+
+				if (selected) {
+					const target = selected === 'left' ? leftRobot : rightRobot;
+
+					// Highlight visual
+					selectionBox.setFromObject(target.group);
+					selectionBox.visible = true;
+
+					// Could auto-focus controls here if we wanted
+				} else {
+					// Maybe clear selection if clicking void?
+					// selectionBox.visible = false;
+				}
+			});
+
 
 			function updateRobots() {
 				const isSnap = snapCheck ? snapCheck.checked : false;
@@ -693,12 +776,12 @@
 						x = Math.round(x / step) * step;
 						y = Math.round(y / step) * step;
 						z = Math.round(z / step) * step;
-						// Optional: snap rotation to 15 degrees (approx 0.26 rad)
-						// rot = Math.round(rot / 0.26) * 0.26; 
 					}
 
 					r.obj.group.position.set(x, y, z);
 					r.obj.group.rotation.y = rot;
+
+					// Update helper if visible and matching
 				});
 
 				readout.innerText = `leftRobot.group.position.set(${robots.left.obj.group.position.x.toFixed(2)}, ${robots.left.obj.group.position.y.toFixed(2)}, ${robots.left.obj.group.position.z.toFixed(2)});\n` +

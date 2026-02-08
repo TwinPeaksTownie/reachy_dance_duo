@@ -6,19 +6,23 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 // --- VISUAL EFFECTS ---
 function createNoteTexture(type = 0) {
     const canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 64;
+    // Double canvas size for higher resolution text
+    canvas.width = 128;
+    canvas.height = 128;
     const ctx = canvas.getContext('2d');
-    ctx.lineWidth = 4;
+    // Larger font (2x) but keep line width same for thinner relative outline
+    ctx.font = 'bold 96px Arial';
+    ctx.lineWidth = 4; // Keep thin outline
     ctx.strokeStyle = '#ffffff';
-    ctx.strokeText(type === 0 ? '♪' : '♫', 32, 32);
+    ctx.strokeText(type === 0 ? '♪' : '♫', 64, 64);
     ctx.fillStyle = '#000000';
-    ctx.fillText(type === 0 ? '♪' : '♫', 32, 32);
+    ctx.fillText(type === 0 ? '♪' : '♫', 64, 64);
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
     return texture;
 }
 
+// ... (Rainbow logic unchanged) ...
 // Helper: VIBGYOR Rainbow Mapping
 const rainbowStops = [
     { t: 0.00, c: new THREE.Color(0x8B00FF) }, // Violet
@@ -45,6 +49,7 @@ export function getRainbowColor(t) {
 }
 
 export class MusicNoteSystem {
+    // ... (Constructor unchanged) ...
     constructor(scene) {
         this.scene = scene;
         this.particles = [];
@@ -84,7 +89,7 @@ export class MusicNoteSystem {
 
         p.active = true;
         p.life = 0;
-        p.maxLife = 1.0 + Math.random() * 1.0; // 1-2 seconds
+        p.maxLife = 1.5 + Math.random() * 1.5; // Longer life (1.5-3s) for drift
 
         p.mesh.visible = true;
         p.mesh.position.copy(position);
@@ -95,14 +100,17 @@ export class MusicNoteSystem {
 
         p.mesh.material.color.copy(color);
         p.mesh.material.rotation = (Math.random() - 0.5) * 0.5; // Slight tilt
-        p.mesh.scale.setScalar(0.3 + Math.random() * 0.3);
 
-        // Upward velocity with drift
-        p.velocity.set(
-            (Math.random() - 0.5) * 0.1, // Slight X drift
-            0.5 + Math.random() * 0.5,   // Upward speed
-            (Math.random() - 0.5) * 0.1  // Slight Z drift
-        );
+        // Massive Scale Increase (2-3x original 0.3-0.6 range) -> 0.8 - 1.5
+        p.mesh.scale.setScalar(0.8 + Math.random() * 0.7);
+
+        // Horizontal Dispersion Logic
+        // Flow away from center (0) based on position, or just random side-to-side
+        const xDir = (Math.random() - 0.5) * 2.0; // Strong horizontal drift
+        const zDir = (Math.random() - 0.5) * 1.0; // Moderate depth drift
+        const yDir = 0.1 + Math.random() * 0.2;   // Gentle upward float (not "odor")
+
+        p.velocity.set(xDir, yDir, zDir);
     }
 
     update(dt) {

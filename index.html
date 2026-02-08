@@ -707,12 +707,30 @@
 				for (let r = 0; r < 12; r++) {
 					let sum = 0;
 					for (let i = 0; i < binSize; i++) sum += dataArray[r * binSize + i];
-					bandVolumes[r] = (sum / binSize) / 255;
+					// Gain Boost (1.6x)
+					bandVolumes[r] = Math.min(((sum / binSize) / 255) * 1.6, 1.0);
 				}
 				// Dampen dominant bass (Exact Backup Values)
 				bandVolumes[0] *= 0.6;
 				bandVolumes[1] *= 0.7;
 				bandVolumes[2] *= 0.8;
+			}
+
+			if (noteSystem) {
+				// Spawn Check (using calculated bandVolumes)
+				// Highs are roughly indexes 8-11
+				const highVol = (bandVolumes[9] + bandVolumes[10] + bandVolumes[11]) / 3;
+
+				if (highVol > 0.4 && Math.random() < 0.3) {
+					const isLeft = Math.random() > 0.5;
+					const sourceRobot = isLeft ? leftRobot : rightRobot;
+					if (sourceRobot && sourceRobot.group) {
+						const spawnPos = sourceRobot.group.position.clone();
+						spawnPos.y += 0.4;
+						const color = getRainbowColor(Math.random());
+						noteSystem.spawn(spawnPos, color);
+					}
+				}
 			}
 
 			const centerCol = 47.5;

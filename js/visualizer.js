@@ -101,8 +101,8 @@ export class MusicNoteSystem {
         p.mesh.material.color.copy(color);
         p.mesh.material.rotation = (Math.random() - 0.5) * 0.5; // Slight tilt
 
-        // Massive Scale Increase (2-3x original 0.3-0.6 range) -> 0.8 - 1.5
-        p.mesh.scale.setScalar(0.8 + Math.random() * 0.7);
+        // Scale Reduced by 50% (User feedback: "too big")
+        p.mesh.scale.setScalar(0.4 + Math.random() * 0.35);
 
         // Horizontal Dispersion Logic
         // Flow away from center (0) based on position, or just random side-to-side

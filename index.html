@@ -721,7 +721,7 @@
 				// Highs are roughly indexes 8-11
 				const highVol = (bandVolumes[9] + bandVolumes[10] + bandVolumes[11]) / 3;
 
-				if (highVol > 0.4 && Math.random() < 0.15) {
+				if (highVol > 0.4 && Math.random() < 0.075) {
 					const isLeft = Math.random() > 0.5;
 					const sourceRobot = isLeft ? leftRobot : rightRobot;
 					if (sourceRobot && sourceRobot.group) {

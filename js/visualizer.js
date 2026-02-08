@@ -10,8 +10,8 @@ function createNoteTexture(type = 0) {
     canvas.width = 128;
     canvas.height = 128;
     const ctx = canvas.getContext('2d');
-    // Larger font (2x) but keep line width same for thinner relative outline
-    ctx.font = 'bold 96px Arial';
+    // Reduce font size to 80px to prevent clipping (User reported tops cut off)
+    ctx.font = 'bold 80px Arial';
     ctx.lineWidth = 4; // Keep thin outline
     ctx.strokeStyle = '#ffffff';
     ctx.strokeText(type === 0 ? '♪' : '♫', 64, 64);
@@ -105,10 +105,10 @@ export class MusicNoteSystem {
         p.mesh.scale.setScalar(0.4 + Math.random() * 0.35);
 
         // Horizontal Dispersion Logic
-        // Flow away from center (0) based on position, or just random side-to-side
-        const xDir = (Math.random() - 0.5) * 2.0; // Strong horizontal drift
-        const zDir = (Math.random() - 0.5) * 1.0; // Moderate depth drift
-        const yDir = 0.1 + Math.random() * 0.2;   // Gentle upward float (not "odor")
+        // "Diagonally kind of moving out and away up"
+        const xDir = (Math.random() - 0.5) * 1.5; // Moderate side spread
+        const yDir = 0.5 + Math.random() * 0.5;   // Consistent upward rise
+        const zDir = (Math.random() - 0.5) * 1.5; // Depth spread
 
         p.velocity.set(xDir, yDir, zDir);
     }

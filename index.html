@@ -353,11 +353,16 @@
 		controls.update();
 
 		// --- LIGHTING ---
-		const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+		const ambientLight = new THREE.AmbientLight(0xffffff, 1.0); // Boosted
 		scene.add(ambientLight);
+		
+		const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 3.0); // Marketing boost
+		scene.add(hemiLight);
+
 		const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
 		keyLight.position.set(5, 10, 7);
 		scene.add(keyLight);
+		
 		const fillLight = new THREE.DirectionalLight(0xeef2f3, 1.0);
 		fillLight.position.set(-5, 5, 5);
 		scene.add(fillLight);
@@ -463,8 +468,8 @@
 		});
 
 		// --- GLOBAL ROBOTS ---
-		const leftRobot = new ReachyRobot('Left', -0.8, false);
-		const rightRobot = new ReachyRobot('Right', 0.8, true);
+		const leftRobot = new ReachyRobot('Left', 0, false);
+		const rightRobot = new ReachyRobot('Right', 0, true);
 
 		let danceData = null;
 		let startTime = 0;

@@ -177,7 +177,7 @@ export class MJCFLoader {
             meshNameLower.includes('bearing');
 
         const isSilver =
-            meshNameLower.includes('stewart') ||
+            meshNameLower.includes('stewart_link_ball') ||
             meshNameLower.includes('rod') ||
             meshNameLower.includes('link') ||
             meshNameLower.includes('arm');
@@ -190,7 +190,22 @@ export class MJCFLoader {
             meshNameLower.includes('arducam') ||
             meshNameLower.includes('glasses');
 
-        if (isDark) {
+        // Explicitly check for white head components
+        const isWhiteHead =
+            meshNameLower.includes('head_front') ||
+            meshNameLower.includes('head_back') ||
+            meshNameLower.includes('head_mic') ||
+            meshNameLower.includes('antenna_body') ||
+            meshNameLower.includes('body_top') ||
+            meshNameLower.includes('body_down');
+
+        if (isWhiteHead) {
+            color = 0xffffff;
+            emissive = 0x333333; // Soft glow
+            roughness = 0.3;
+            metalness = 0.0;
+        }
+        else if (isDark) {
             color = 0x111111;
             emissive = 0x000000;
             roughness = 0.8;
@@ -228,7 +243,7 @@ export class MJCFLoader {
             metalness = 0.1;
         }
 
-        const emissiveIntensity = isAntenna ? 0.01 : (isDark ? 0.0 : (isSilver ? 0.2 : 0.3));
+        const emissiveIntensity = isAntenna ? 0.01 : (isWhiteHead ? 0.2 : (isDark ? 0.0 : (isSilver ? 0.2 : 0.3)));
 
         return new THREE.MeshStandardMaterial({
             color: color,

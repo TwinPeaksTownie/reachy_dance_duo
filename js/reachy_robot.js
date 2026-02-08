@@ -19,32 +19,21 @@ export class ReachyRobot {
                 // Attach to class instance group
                 this.group.add(group);
 
-                // Setup Kinematic Structures (from index.html logic)
+                // Setup Kinematic Structures
                 this._setupKinematics(group);
 
-                // Setup Base Transforms
-                this.group.rotation.x = -Math.PI / 2; // Z-up to Y-up
+                // Setup Base Transforms - MONOLITHIC CALIBRATION
+                this.group.rotation.x = -Math.PI / 2; // Z-up fix
 
-                // Rotation Y: Angle 35 degrees towards center
-                const angle35 = (35 * Math.PI) / 180;
-                if (this.mirrored) {
-                    this.group.rotation.y = Math.PI + angle35;
+                if (this.name === 'Left') {
+                    this.group.position.set(-10, -5, 25);
+                    this.group.rotation.z = -Math.PI / 6; // Yaw
                 } else {
-                    this.group.rotation.y = angle35;
+                    this.group.position.set(10, -5, 25);
+                    this.group.rotation.z = Math.PI / 6 + Math.PI; // Yaw + 180
                 }
 
-                this.group.position.set(this.xOffset, 0, 0);
-                this.group.scale.set(5, 5, 5); // Visible scale
-
-                // Add to Scene (assuming scene is global or passed... wait, scene is not global here)
-                // We should let the caller add 'this.group' to the scene, OR pass scene in constructor.
-                // Let's assume global 'scene' exists in index.html, but here we can't access it unless passed.
-                // I'll make index.html add it, but for compatibility with dance_duo.html logic which called '.load', 
-                // dance_duo.html added it inside .load().
-                // I'll dispatch an event or rely on main code to add it? 
-                // dance_duo.html line 1341: scene.add(this.group). 
-                // I will add a method 'addToScene(scene)' or just let the user access .group.
-                // Better: index.html logic can do scene.add(robot.group).
+                this.group.scale.set(20, 20, 20); // Marketing scale
 
                 this.isLoaded = true;
                 resolve();
@@ -59,19 +48,16 @@ export class ReachyRobot {
 
         // 1. Traverse and Map Components
         robotGroup.traverse(c => {
-            // Map BODY Joints using XML data
+            // Map BODY Joints
             if (c.userData && c.userData.jointName) {
                 this.joints[c.userData.jointName] = c;
                 if (!c.userData.origQuat) c.userData.origQuat = c.quaternion.clone();
             }
 
-            // Map Sites (Closing Sites & Head Sites)
+            // Map Sites
             if (c.userData.type === 'site') {
                 if (c.name.startsWith('closing_')) {
                     const parts = c.name.split('_');
-                    // Expected format: closing_ROD_END (e.g. closing_1_1, closing_1_2) 
-                    // closing_X_1 = Rod End? closing_X_2 = Head Socket?
-                    // XML spec: closing_X_2 are on the head (xl_330).
                     const rodId = parseInt(parts[1]);
                     const siteId = parseInt(parts[2]);
 
@@ -82,29 +68,16 @@ export class ReachyRobot {
                 }
             }
 
-            // Map Rod Bodies (Heuristic name match)
-            // Rods are usually named 'rod_1', 'rod_2' etc, or 'stewart_arm_X'
-            // In MJCF parsing, names come from Body names.
-            // Let's look for "rod" or numbers in the name
+            // Map Rod Bodies
             const lowerName = c.name.toLowerCase();
             if (lowerName.includes('rod') || (lowerName.includes('stewart') && !lowerName.includes('ball') && !lowerName.includes('horn'))) {
-                // Try to extract ID
-                // Format might be 'rod_1' or just '1' if name is simple
                 const parts = c.name.split('_');
                 const lastPart = parts[parts.length - 1];
                 let id = parseInt(lastPart);
-                if (isNaN(id) && lowerName.includes('rod')) id = 1; // Default
+                if (isNaN(id) && lowerName.includes('rod')) id = 1;
 
                 if (!isNaN(id)) {
                     rodBodies.set(id, c);
-                    // Ensure silver material
-                    c.traverse(child => {
-                        if (child.isMesh) {
-                            child.material.color.setHex(0xaaaaaa);
-                            child.material.roughness = 0.2;
-                            child.material.metalness = 1.0;
-                        }
-                    });
                 }
             }
         });
@@ -112,24 +85,15 @@ export class ReachyRobot {
         // 2. Setup Rod Connections (Visual Parenting)
         robotGroup.userData.rods = [];
 
-        // Find Head (xl_330)
         const head = robotGroup.getObjectByName('xl_330');
         if (head) {
-            // Create Pivot Group wrapper for Head
             const pivotGroup = new THREE.Group();
             pivotGroup.name = "HeadPivotGroup";
 
-            // Parent the pivot to the head's current parent (rod_6 usually)
             if (head.parent) {
                 const parent = head.parent;
-                // Re-parent head into pivot
-                // Save transformations
                 const headPos = head.position.clone();
                 const headQuat = head.quaternion.clone();
-
-                // We want pivot at head location? Or pivot at rotation center?
-                // Rod 6 is the neck. Head attaches to it.
-                // We insert PivotGroup between Rod6 and Head for easier animation control.
 
                 pivotGroup.position.copy(headPos);
                 pivotGroup.quaternion.copy(headQuat);
@@ -137,16 +101,27 @@ export class ReachyRobot {
                 parent.add(pivotGroup);
                 pivotGroup.add(head);
 
-                // Zero out head local transform as it is now relative to pivot
-                head.position.set(0, 0, 0);
-                head.rotation.set(0, 0, 0);
+                // --- CALIBRATED OFFSETS FROM MONOLITHIC ---
+                if (this.name === 'Left') {
+                    // LEFT ROBOT DEFAULTS
+                    pivotGroup.position.set(0.0290, 0.0280, 0.1430);
+                    pivotGroup.rotation.set(-1.6232, -2.0944, -1.9897);
+                    head.position.set(0.0000, 0.0000, 0.0000);
+                } else {
+                    // RIGHT ROBOT DEFAULTS
+                    pivotGroup.position.set(0.0190, 0.0240, 0.1410);
+                    pivotGroup.rotation.set(1.7279, -1.2217, 1.2741);
+                    head.position.set(0.0069, 0.0020, 0.0082);
+                }
+
+                // Head base rotation fix for MuJoCo XML alignment
+                head.rotation.set(0, 0, Math.PI);
 
                 this.headPivot = pivotGroup;
                 this.headMesh = head;
 
-                // Save initial pose
                 pivotGroup.userData.initialPosition = pivotGroup.position.clone();
-                pivotGroup.userData.initialQuaternion = pivotGroup.quaternion.clone();
+                pivotGroup.userData.initialRotation = pivotGroup.rotation.clone();
             }
         }
 

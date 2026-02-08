@@ -326,7 +326,7 @@
 		const container = document.getElementById('visualizer-container');
 		const scene = new THREE.Scene();
 		const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-		camera.position.set(0, 1.5, 4);
+		camera.position.set(0.06650214614867994, -0.5509992498139562, 3.885498842512818);
 
 		const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 		renderer.setSize(window.innerWidth, window.innerHeight);
@@ -349,23 +349,35 @@
 		composer.addPass(outputPass);
 
 		const controls = new OrbitControls(camera, renderer.domElement);
-		controls.target.set(0, 1, 0);
+		controls.target.set(0.22978033215455446, -0.23017558883193248, 0.0037882423081313974);
 		controls.update();
 
 		// --- LIGHTING ---
-		const ambientLight = new THREE.AmbientLight(0xffffff, 1.0); // Boosted
+		const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
 		scene.add(ambientLight);
-		
-		const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 3.0); // Marketing boost
-		scene.add(hemiLight);
 
 		const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
 		keyLight.position.set(5, 10, 7);
 		scene.add(keyLight);
-		
+
 		const fillLight = new THREE.DirectionalLight(0xeef2f3, 1.0);
 		fillLight.position.set(-5, 5, 5);
 		scene.add(fillLight);
+
+		const rimLight = new THREE.PointLight(0xffffff, 2.0);
+		rimLight.position.set(0, 10, -10);
+		scene.add(rimLight);
+
+		// Ring Light Array for premium reflections
+		const ringRadius = 5;
+		const ringZ = 15;
+		const ringCount = 8;
+		for (let i = 0; i < ringCount; i++) {
+			const angle = (i / ringCount) * Math.PI * 2;
+			const ringLight = new THREE.PointLight(0xffffff, 0.8, 50);
+			ringLight.position.set(Math.cos(angle) * ringRadius, Math.sin(angle) * ringRadius, ringZ);
+			scene.add(ringLight);
+		}
 
 
 		// --- 3D TITLE CARD SYSTEM (Hero Visuals) ---
@@ -483,9 +495,16 @@
 					rightRobot.load('reachy_mini.xml')
 				]);
 
-				// Add robots to scene after loading
+				// Added robots to scene after loading
 				scene.add(leftRobot.group);
 				scene.add(rightRobot.group);
+
+				// APPLY ROBOT CONFIG FROM TEST2 (HARDCODED FOR STATIC)
+				leftRobot.group.position.set(-0.8786421648527453, -1.45, -1);
+				leftRobot.group.rotation.set(-1.5707963057214724, -1.0821041362364838, 0);
+				
+				rightRobot.group.position.set(0.8058102035783206, -1.45, -0.7084707284386818);
+				rightRobot.group.rotation.set(-1.5707963267948966, -2.0769418098732526, 0);
 
 				const data = await danceRes.json();
 				danceData = data.frames || data;

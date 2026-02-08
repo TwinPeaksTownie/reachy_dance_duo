@@ -310,16 +310,15 @@ export class SVG3DSystem {
         const grad = ctx.createLinearGradient(0, 0, 0, 256);
         const base = new THREE.Color(baseColorHex).getStyle();
         const pos = 1.0 - beamY;
-        const totalWidth = 0.15;
-        const halfWidth = totalWidth / 2;
-        const innerRadius = halfWidth * (1.0 - feather);
-        const outerRadius = halfWidth;
+        const coreWidth = 0.02; // Consistent solid red core
+        const maxSpread = 0.8;  // Allow much wider transition zone
+        const currentSpread = feather * maxSpread;
 
         grad.addColorStop(0.0, base);
-        const s1 = Math.max(0, Math.min(1, pos - outerRadius));
-        const s2 = Math.max(0, Math.min(1, pos - innerRadius));
-        const s3 = Math.max(0, Math.min(1, pos + innerRadius));
-        const s4 = Math.max(0, Math.min(1, pos + outerRadius));
+        const s1 = Math.max(0, pos - coreWidth - currentSpread);
+        const s2 = Math.max(0, pos - coreWidth);
+        const s3 = Math.min(1, pos + coreWidth);
+        const s4 = Math.min(1, pos + coreWidth + currentSpread);
 
         grad.addColorStop(s1, base);
         grad.addColorStop(s2, '#ff0000');

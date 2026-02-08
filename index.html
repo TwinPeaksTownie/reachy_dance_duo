@@ -331,6 +331,21 @@
 						step="0.01" value="-2.07"></div>
 			</div>
 
+			<div class="coord-divider">TOOLS</div>
+			<div class="coord-row">
+				<label>Show Grid</label>
+				<input type="checkbox" id="chk-show-grid">
+			</div>
+			<div class="coord-row">
+				<label>Snap to Grid</label>
+				<input type="checkbox" id="chk-snap">
+			</div>
+			<div class="coord-row">
+				<label>Snap Step</label>
+				<input type="number" id="snap-step" value="0.5" step="0.1"
+					style="width: 50px; background:#222; border:1px solid #444; color:#fff; border-radius:4px;">
+			</div>
+
 			<div class="coord-divider">HARD-CODE SNIPPET</div>
 			<pre id="robot-readout">// Robot Coordinates</pre>
 
@@ -350,7 +365,7 @@
 			<div class="control-group"><label>Bloom Radius</label><input type="range" id="bloom-radius" min="0" max="2"
 					step="0.01" value="0.39"></div>
 			<div class="control-group"><label>Bloom Strength</label><input type="range" id="bloom-strength" min="0"
-					max="5" step="0.1" value="0.3"></div>
+					max="5" step="0.1" value="0.1"></div>
 			<div class="control-group"><label>Bloom Threshold</label><input type="range" id="bloom-threshold" min="0"
 					max="2.0" step="0.1" value="1.5"></div>
 			<div class="control-group"><label>Tilt</label><input type="range" id="svg-tilt" min="-0.2" max="0.2"
@@ -360,11 +375,11 @@
 			<div class="control-group"><label>Offset Y</label><input type="range" id="svg-y" min="0" max="3" step="0.1"
 					value="1.4"></div>
 			<div class="control-group"><label>Drift</label><input type="range" id="drift-speed" min="0" max="2"
-					step="0.1" value="0.4"></div>
+					step="0.1" value="1.4"></div>
 			<div class="control-group"><label>Beam Pos Y</label><input type="range" id="red-beam" min="0" max="1"
 					step="0.01" value="0.35"></div>
 			<div class="control-group"><label>Beam Feather</label><input type="range" id="beam-feather" min="0" max="1"
-					step="0.01" value="0.8"></div>
+					step="0.01" value="0.33"></div>
 
 			<div class="coord-divider">LIVE CONFIG SNIPPET</div>
 			<pre id="svg-readout">// Logo Config</pre>
@@ -649,15 +664,53 @@
 				right: { obj: rightRobot, x: document.getElementById('r-pos-x'), y: document.getElementById('r-pos-y'), z: document.getElementById('r-pos-z'), rotY: document.getElementById('r-rot-y') }
 			};
 			const readout = document.getElementById('robot-readout');
+
+			// Grid & Snap Logic
+			const gridHelper = new THREE.GridHelper(20, 20, 0x00D1FF, 0x333333);
+			gridHelper.position.y = -2; // Floor level
+			gridHelper.visible = false;
+			scene.add(gridHelper);
+
+			const showGridCheck = document.getElementById('chk-show-grid');
+			const snapCheck = document.getElementById('chk-snap');
+			const snapStepInput = document.getElementById('snap-step');
+
+			if (showGridCheck) showGridCheck.addEventListener('change', (e) => gridHelper.visible = e.target.checked);
+
 			function updateRobots() {
+				const isSnap = snapCheck ? snapCheck.checked : false;
+				const step = snapStepInput ? parseFloat(snapStepInput.value) : 0.5;
+
 				[robots.left, robots.right].forEach(r => {
 					if (!r.obj?.group) return;
-					r.obj.group.position.set(parseFloat(r.x.value), parseFloat(r.y.value), parseFloat(r.z.value));
-					r.obj.group.rotation.y = parseFloat(r.rotY.value);
+
+					let x = parseFloat(r.x.value);
+					let y = parseFloat(r.y.value);
+					let z = parseFloat(r.z.value);
+					let rot = parseFloat(r.rotY.value);
+
+					if (isSnap) {
+						x = Math.round(x / step) * step;
+						y = Math.round(y / step) * step;
+						z = Math.round(z / step) * step;
+						// Optional: snap rotation to 15 degrees (approx 0.26 rad)
+						// rot = Math.round(rot / 0.26) * 0.26; 
+					}
+
+					r.obj.group.position.set(x, y, z);
+					r.obj.group.rotation.y = rot;
 				});
-				readout.innerText = `leftRobot.group.position.set(${robots.left.x.value}, ${robots.left.y.value}, ${robots.left.z.value});\nleftRobot.group.rotation.y = ${robots.left.rotY.value};\nrightRobot.group.position.set(${robots.right.x.value}, ${robots.right.y.value}, ${robots.right.z.value});\nrightRobot.group.rotation.y = ${robots.right.rotY.value};`;
+
+				readout.innerText = `leftRobot.group.position.set(${robots.left.obj.group.position.x.toFixed(2)}, ${robots.left.obj.group.position.y.toFixed(2)}, ${robots.left.obj.group.position.z.toFixed(2)});\n` +
+					`leftRobot.group.rotation.y = ${robots.left.obj.group.rotation.y.toFixed(2)};\n` +
+					`rightRobot.group.position.set(${robots.right.obj.group.position.x.toFixed(2)}, ${robots.right.obj.group.position.y.toFixed(2)}, ${robots.right.obj.group.position.z.toFixed(2)});\n` +
+					`rightRobot.group.rotation.y = ${robots.right.obj.group.rotation.y.toFixed(2)};`;
 			}
+
 			[...Object.values(robots.left), ...Object.values(robots.right)].forEach(el => { if (el instanceof HTMLElement) el.addEventListener('input', updateRobots); });
+			if (snapCheck) snapCheck.addEventListener('change', updateRobots);
+			if (snapStepInput) snapStepInput.addEventListener('input', updateRobots);
+
 			setTimeout(updateRobots, 500);
 		}
 

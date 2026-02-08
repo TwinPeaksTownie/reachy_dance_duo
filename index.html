@@ -60,26 +60,6 @@
 			max-width: 800px;
 			z-index: 1;
 			pointer-events: none;
-			/* Allow interaction with canvas below if needed */
-		}
-
-		.hero-emoji {
-			font-size: 4rem;
-			margin-bottom: 1rem;
-			display: block;
-			animation: bounce 2s infinite;
-		}
-
-		@keyframes bounce {
-
-			0%,
-			100% {
-				transform: translateY(0);
-			}
-
-			50% {
-				transform: translateY(-10px);
-			}
 		}
 
 		.hero h1 {
@@ -91,31 +71,6 @@
 			background-clip: text;
 			-webkit-text-fill-color: transparent;
 			letter-spacing: -1px;
-		}
-
-		.hero p {
-			font-size: 1.5rem;
-			color: var(--text-dim);
-			margin-bottom: 2rem;
-			font-weight: 300;
-		}
-
-		.tags {
-			display: flex;
-			gap: 0.5rem;
-			justify-content: center;
-			flex-wrap: wrap;
-			margin-bottom: 2rem;
-		}
-
-		.tag {
-			background: rgba(255, 255, 255, 0.1);
-			padding: 0.4rem 1rem;
-			border-radius: 20px;
-			font-size: 0.8rem;
-			font-weight: 600;
-			color: var(--text-dim);
-			border: 1px solid rgba(255, 255, 255, 0.1);
 		}
 
 		/* Overlay Controls for Demo */
@@ -146,105 +101,7 @@
 			box-shadow: 0 0 20px var(--primary-glow);
 		}
 
-		/* --- Technical Section --- */
-		.section {
-			padding: 6rem 2rem;
-			max-width: 1200px;
-			margin: 0 auto;
-			background: var(--dark-bg);
-			position: relative;
-			z-index: 5;
-		}
-
-		.section-title {
-			text-align: center;
-			font-size: 2.5rem;
-			margin-bottom: 4rem;
-			font-weight: 700;
-		}
-
-		.grid {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-			gap: 2rem;
-		}
-
-		.card {
-			background: var(--card-bg);
-			padding: 2.5rem;
-			border-radius: 24px;
-			border: 1px solid rgba(255, 255, 255, 0.05);
-			transition: transform 0.3s ease, border-color 0.3s ease;
-		}
-
-		.card:hover {
-			transform: translateY(-5px);
-			border-color: var(--primary);
-		}
-
-		.step-num {
-			width: 40px;
-			height: 40px;
-			background: var(--primary);
-			color: black;
-			border-radius: 50%;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-weight: 800;
-			margin-bottom: 1.5rem;
-		}
-
-		.card h3 {
-			margin-bottom: 1rem;
-			font-size: 1.5rem;
-		}
-
-		.card p {
-			color: var(--text-dim);
-			font-size: 1rem;
-		}
-
-		/* --- Footer --- */
-		footer {
-			padding: 4rem 2rem;
-			border-top: 1px solid rgba(255, 255, 255, 0.05);
-			text-align: center;
-			color: var(--text-dim);
-			background: var(--dark-bg);
-			position: relative;
-			z-index: 5;
-		}
-
-		.footer-links {
-			display: flex;
-			gap: 2rem;
-			justify-content: center;
-			margin-bottom: 2rem;
-		}
-
-		.footer-links a {
-			color: var(--text-main);
-			text-decoration: none;
-			font-weight: 600;
-			transition: color 0.2s;
-		}
-
-		.footer-links a:hover {
-			color: var(--primary);
-		}
-
-		@media (max-width: 768px) {
-			.hero h1 {
-				font-size: 2.5rem;
-			}
-
-			.hero p {
-				font-size: 1.1rem;
-			}
-		}
-
-		/* --- REPLACED EDITOR UI STYLES --- */
+		/* --- Editor UI STYLES --- */
 		#builder-panel {
 			position: absolute;
 			top: 20px;
@@ -285,62 +142,33 @@
 			margin: 10px 0 5px;
 			font-size: 0.8em;
 			color: #888;
+			text-transform: uppercase;
 		}
 
-		.slide-row label {
-			width: 20px;
-		}
-
-		.slide-row input {
-			width: 70px;
-			margin: 0 2px;
-		}
-
-		.slide-val {
-			font-size: 0.8em;
-			color: #fff;
-			width: 35px;
-			text-align: right;
-		}
-
-		.nudge-btn {
-			width: 24px;
-			height: 24px;
-			border: 1px solid #0ff;
-			background: rgba(0, 40, 40, 0.5);
-			color: #0ff;
-			cursor: pointer;
-			font-size: 16px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
+		#svg-panel pre,
+		#builder-panel pre {
+			background: rgba(0, 0, 0, 0.5);
+			padding: 10px;
 			border-radius: 4px;
-		}
-
-		.nudge-btn:hover {
-			background: #0ff;
-			color: #000;
-		}
-
-		.tools-row {
-			display: flex;
-			gap: 5px;
-			margin: 10px 0;
-		}
-
-		.tool-btn {
-			flex: 1;
-			background: #222;
-			border: 1px solid #0ff;
+			font-size: 10px;
 			color: #0ff;
-			cursor: pointer;
-			padding: 6px;
-			font-size: 0.8em;
+			overflow-x: auto;
+			margin-top: 10px;
+			border: 1px solid rgba(0, 255, 255, 0.2);
+			white-space: pre-wrap;
+			font-family: monospace;
 		}
 
-		.tool-btn.active {
-			background: #0ff;
-			color: #000;
+		.robot-control-group {
+			border-top: 1px solid rgba(0, 255, 255, 0.2);
+			padding-top: 10px;
+			margin-top: 10px;
+		}
+
+		.robot-control-group h4 {
+			margin: 0 0 8px 0;
+			font-size: 12px;
+			color: #fff;
 		}
 
 		.action-btn {
@@ -354,10 +182,6 @@
 			margin-top: 5px;
 			text-transform: uppercase;
 			font-size: 0.8rem;
-		}
-
-		.action-btn:hover {
-			background: #fff;
 		}
 
 		.action-btn.secondary {
@@ -439,6 +263,40 @@
 			cursor: pointer;
 			border-radius: 4px;
 		}
+
+		/* technical section overrides */
+		.section {
+			padding: 6rem 2rem;
+			max-width: 1200px;
+			margin: 0 auto;
+			background: var(--dark-bg);
+		}
+
+		.grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+			gap: 2rem;
+		}
+
+		.card {
+			background: var(--card-bg);
+			padding: 2.5rem;
+			border-radius: 24px;
+			border: 1px solid rgba(255, 255, 255, 0.05);
+		}
+
+		.step-num {
+			width: 40px;
+			height: 40px;
+			background: var(--primary);
+			color: black;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-weight: 800;
+			margin-bottom: 1.5rem;
+		}
 	</style>
 </head>
 
@@ -449,27 +307,35 @@
 
 		<!-- UI PANELS FOR AESTHETIC FINE-TUNING -->
 		<div id="builder-panel" class="hidden">
-			<h3>Placement Mode</h3>
-			<p>Selected: <span id="builder-target">None</span></p>
-			<div class="coord-row"><label>X:</label> <span id="val-x">0.00</span></div>
-			<div class="coord-row"><label>Y:</label> <span id="val-y">0.00</span></div>
-			<div class="coord-row"><label>Z:</label> <span id="val-z">0.00</span></div>
-			<div class="coord-divider">ROTATION (Deg)</div>
-			<div class="coord-row slide-row">
-				<label>X:</label>
-				<input type="range" id="rot-x" min="-180" max="180" step="1">
-				<span id="disp-rot-x" class="slide-val">0</span>
+			<h3>Robot Placement</h3>
+			<div class="robot-control-group">
+				<h4>Left Robot</h4>
+				<div class="coord-row"><label>X</label><input type="range" id="l-pos-x" min="-10" max="10" step="0.01"
+						value="-0.87"></div>
+				<div class="coord-row"><label>Y</label><input type="range" id="l-pos-y" min="-5" max="5" step="0.01"
+						value="-1.45"></div>
+				<div class="coord-row"><label>Z</label><input type="range" id="l-pos-z" min="-20" max="5" step="0.1"
+						value="-1.0"></div>
+				<div class="coord-row"><label>Yaw</label><input type="range" id="l-rot-y" min="-3.14" max="3.14"
+						step="0.01" value="-1.08"></div>
 			</div>
-			<div class="coord-row slide-row">
-				<label>Y:</label>
-				<input type="range" id="rot-y" min="-180" max="180" step="1">
-				<span id="disp-rot-y" class="slide-val">0</span>
+			<div class="robot-control-group">
+				<h4>Right Robot</h4>
+				<div class="coord-row"><label>X</label><input type="range" id="r-pos-x" min="-10" max="10" step="0.01"
+						value="0.80"></div>
+				<div class="coord-row"><label>Y</label><input type="range" id="r-pos-y" min="-5" max="5" step="0.01"
+						value="-1.45"></div>
+				<div class="coord-row"><label>Z</label><input type="range" id="r-pos-z" min="-20" max="5" step="0.1"
+						value="-0.70"></div>
+				<div class="coord-row"><label>Yaw</label><input type="range" id="r-rot-y" min="-3.14" max="3.14"
+						step="0.01" value="-2.07"></div>
 			</div>
-			<button id="btn-lock" class="action-btn">🔒 Lock Position</button>
-			<button id="btn-cancel" class="action-btn secondary">Cancel</button>
-			<div class="coord-divider">CAMERA POV</div>
-			<div class="coord-row"><label>Pos:</label> <span id="cam-pos">0, 0, 0</span></div>
-			<div class="coord-row"><label>Rot:</label> <span id="cam-rot">0, 0, 0</span></div>
+
+			<div class="coord-divider">HARD-CODE SNIPPET</div>
+			<pre id="robot-readout">// Robot Coordinates</pre>
+
+			<button id="btn-lock" class="action-btn">🔓 Lock Position</button>
+			<button id="btn-cancel" class="action-btn secondary">Close</button>
 		</div>
 
 		<button id="btn-builder-toggle" title="Enter Placement Mode">🛠️</button>
@@ -499,6 +365,10 @@
 					step="0.01" value="0.35"></div>
 			<div class="control-group"><label>Beam Feather</label><input type="range" id="beam-feather" min="0" max="1"
 					step="0.01" value="0.8"></div>
+
+			<div class="coord-divider">LIVE CONFIG SNIPPET</div>
+			<pre id="svg-readout">// Logo Config</pre>
+
 			<button id="btn-save-svg" class="action-btn">💾 Save Config (Persistent)</button>
 		</div>
 
@@ -516,35 +386,30 @@
 				<div class="step-num">1</div>
 				<h3>Connect</h3>
 				<p>Launch the app from your Reachy Mini dashboard. The 3D visualizer will automatically link to your
-					robot's sensors.</p>
+					robot sensors.</p>
 			</div>
 			<div class="card">
 				<div class="step-num">2</div>
 				<h3>Pick a Mode</h3>
-				<p>Choose <strong>Live Groove</strong> to dance to ambient sounds via microphone, or <strong>Beat
-						Bandit</strong> to choreograph to YouTube tracks.</p>
+				<p>Choose <strong>Live Groove</strong> to dance to ambient sounds, or <strong>Beat Bandit</strong> to
+					choreograph to tracks.</p>
 			</div>
 			<div class="card">
 				<div class="step-num">3</div>
 				<h3>Customize</h3>
 				<p>Adjust intensity, amplitude, and safety parameters in real-time. Watch the robots react in the
-					visualizer before they move in physical space.</p>
+					visualizer.</p>
 			</div>
 			<div class="card">
 				<div class="step-num">4</div>
 				<h3>Dance!</h3>
 				<p>Hit start and watch Reachy Mini perform. The dual-robot kinematics ensure smooth, expressive
-					movements synced to every beat.</p>
+					movements.</p>
 			</div>
 		</div>
 	</section>
 
 	<footer>
-		<div class="footer-links">
-			<a href="https://pollen-robotics.com">Pollen Robotics</a>
-			<a href="https://github.com/pollen-robotics/reachy-mini">GitHub</a>
-			<a href="https://huggingface.co/pollen-robotics">HF App Store</a>
-		</div>
 		<p>&copy; 2026 Pollen Robotics. Built for Reachy Mini.</p>
 	</footer>
 
@@ -562,18 +427,13 @@
 	<script type="module">
 		import * as THREE from 'three';
 		import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
-		// Post-Processing
 		import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 		import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 		import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 		import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-
-		// Custom Modules
 		import { ReachyRobot } from './js/reachy_robot.js';
 		import { MusicNoteSystem, SVG3DSystem, getRainbowColor } from './js/visualizer.js';
 
-		// --- SCENE SETUP ---
 		const container = document.getElementById('visualizer-container');
 		const scene = new THREE.Scene();
 		const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -586,12 +446,11 @@
 		renderer.toneMapping = THREE.ReinhardToneMapping;
 		container.appendChild(renderer.domElement);
 
-		// --- POST PROCESSING ---
 		const renderScene = new RenderPass(scene, camera);
 		const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-		bloomPass.threshold = 1.5; // Definitive threshold
-		bloomPass.strength = 0.3;  // Definitive strength
-		bloomPass.radius = 0.39;  // Definitive radius
+		bloomPass.threshold = 1.5;
+		bloomPass.strength = 0.3;
+		bloomPass.radius = 0.39;
 		const outputPass = new OutputPass();
 
 		const composer = new EffectComposer(renderer);
@@ -603,111 +462,48 @@
 		controls.target.set(0.22978033215455446, -0.23017558883193248, 0.0037882423081313974);
 		controls.update();
 
-		// --- LIGHTING ---
 		const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
 		scene.add(ambientLight);
-
 		const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
 		keyLight.position.set(5, 10, 7);
 		scene.add(keyLight);
 
-		const fillLight = new THREE.DirectionalLight(0xeef2f3, 1.0);
-		fillLight.position.set(-5, 5, 5);
-		scene.add(fillLight);
-
-		const rimLight = new THREE.PointLight(0xffffff, 2.0);
-		rimLight.position.set(0, 10, -10);
-		scene.add(rimLight);
-
-		// Ring Light Array for premium reflections
-		const ringRadius = 5;
-		const ringZ = 15;
-		const ringCount = 8;
-		for (let i = 0; i < ringCount; i++) {
-			const angle = (i / ringCount) * Math.PI * 2;
-			const ringLight = new THREE.PointLight(0xffffff, 0.8, 50);
-			ringLight.position.set(Math.cos(angle) * ringRadius, Math.sin(angle) * ringRadius, ringZ);
-			scene.add(ringLight);
-		}
-
-
-		// --- 3D TITLE CARD SYSTEM (Hero Visuals) ---
 		const svgSystem = new SVG3DSystem(scene);
 		svgSystem.load('assets/dance_duo.svg');
-
-		// Floating Notes
 		const noteSystem = new MusicNoteSystem(scene);
 
-
-		// --- RAINBOW VISUALIZER (Deep Loop) ---
-		const columns = 96;
-		const panelsTurn = 32;
-		const panelsLeg = 32;
-		const turnRadius = 25;
-		const legLength = 80;
-		const turnCenterZ = -50;
-
+		// Visualizer Blocks
 		const visualizerGroup = new THREE.Group();
 		scene.add(visualizerGroup);
 		const blocks = [];
+		const columns = 96;
+		const centerCol = 47.5;
+		const mapping = [11, 9, 7, 5, 3, 1, 0, 2, 4, 6, 8, 10];
 		const panelGeometry = new THREE.PlaneGeometry(2.4, 1.25);
 
 		for (let col = 0; col < columns; col++) {
 			const columnBlocks = [];
-			let x, z, rotY;
-
-			if (col < panelsLeg) {
-				x = -turnRadius;
-				const legProgress = (panelsLeg - 1 - col) / panelsLeg;
-				z = turnCenterZ + legProgress * legLength;
-				rotY = Math.PI / 2;
-			} else if (col < panelsLeg + panelsTurn) {
-				const turnCol = col - panelsLeg;
-				const pct = turnCol / (panelsTurn - 1);
-				const angle = Math.PI * (1 - pct);
-				x = turnRadius * Math.cos(angle);
-				z = turnCenterZ - turnRadius * Math.sin(angle);
-				rotY = angle - Math.PI / 2;
-			} else {
-				const rightCol = col - (panelsLeg + panelsTurn);
-				const legProgress = rightCol / panelsLeg;
-				x = turnRadius;
-				z = turnCenterZ + legProgress * legLength;
-				rotY = -Math.PI / 2;
-			}
-
 			for (let row = 0; row < 12; row++) {
-				const material = new THREE.MeshStandardMaterial({
-					color: 0x111111,
-					emissive: 0x000000,
-					transparent: true,
-					opacity: 0.05,
-					side: THREE.FrontSide
-				});
-				const block = new THREE.Mesh(panelGeometry, material);
-				block.position.set(x, (row - 6) * 1.28, z);
-				block.rotation.y = rotY;
+				const mat = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0x000000, transparent: true, opacity: 0.05 });
+				const block = new THREE.Mesh(panelGeometry, mat);
+				block.position.set((col - centerCol) * 2.5, (row - 6) * 1.3, -50);
 				visualizerGroup.add(block);
-				columnBlocks.push({ mesh: block, material: material });
+				columnBlocks.push({ mesh: block, material: mat });
 			}
 			blocks.push(columnBlocks);
 		}
 		visualizerGroup.scale.set(0.2, 0.2, 0.2);
 		visualizerGroup.position.set(0, 0, -5);
 
-		// Row peaks for smooth animation (start with initial spread)
 		const rowPeaks = Array.from({ length: 12 }, () => ({ left: 40.5, right: 54.5 }));
-		const centerCol = 47.5;
-		// Symmetric mapping - outer edges share frequencies for mirror effect
-		const mapping = [11, 9, 7, 5, 3, 1, 0, 2, 4, 6, 8, 10];
 
-		// --- AUDIO SYSTEM ---
+		// Audio
 		const audio = document.getElementById('dance-audio');
-		const toggleBtn = document.getElementById('toggleAudio');
+		const audioToggle = document.getElementById('toggleAudio');
 		let audioContext, analyser, dataArray;
 		let audioStarted = false;
 
-		toggleBtn.addEventListener('click', async () => {
+		audioToggle.addEventListener('click', async () => {
 			if (!audioContext) {
 				audioContext = new (window.AudioContext || window.webkitAudioContext)();
 				const source = audioContext.createMediaElementSource(audio);
@@ -718,25 +514,14 @@
 				dataArray = new Uint8Array(analyser.frequencyBinCount);
 				audioStarted = true;
 			}
-
 			if (audioContext.state === 'suspended') await audioContext.resume();
-
-			if (audio.paused) {
-				await audio.play();
-				toggleBtn.textContent = '⏸ Pause Demo Audio';
-			} else {
-				audio.pause();
-				toggleBtn.textContent = '🔊 Start Demo Audio';
-			}
+			if (audio.paused) { audio.play(); audioToggle.textContent = '⏸ Pause Audio'; }
+			else { audio.pause(); audioToggle.textContent = '🔊 Start Audio'; }
 		});
 
-		// --- GLOBAL ROBOTS ---
 		const leftRobot = new ReachyRobot('Left', 0, false);
 		const rightRobot = new ReachyRobot('Right', 0, true);
-
-		let danceData = null;
-		let startTime = 0;
-
+		let danceData = null, startTime = 0;
 
 		async function startAnimation() {
 			try {
@@ -745,105 +530,140 @@
 					leftRobot.load('reachy_mini.xml'),
 					rightRobot.load('reachy_mini.xml')
 				]);
-
-				// Added robots to scene after loading
 				scene.add(leftRobot.group);
 				scene.add(rightRobot.group);
 
-				// APPLY ROBOT CONFIG FROM TEST2 (HARDCODED FOR STATIC)
-				leftRobot.group.position.set(-0.8786421648527453, -1.45, -1);
-				leftRobot.group.rotation.set(-1.5707963057214724, -1.0821041362364838, 0);
+				leftRobot.group.position.set(-0.87, -1.45, -1);
+				leftRobot.group.rotation.set(-1.57, -1.08, 0);
+				rightRobot.group.position.set(0.80, -1.45, -0.70);
+				rightRobot.group.rotation.set(-1.57, -2.07, 0);
 
-				rightRobot.group.position.set(0.8058102035783206, -1.45, -0.7084707284386818);
-				rightRobot.group.rotation.set(-1.5707963267948966, -2.0769418098732526, 0);
-
-				const data = await danceRes.json();
-				danceData = data.frames || data;
-
+				danceData = (await danceRes.json()).frames || [];
 				startTime = performance.now();
-				requestAnimationFrame(animate);
-			} catch (err) {
-				console.error("Init Failed", err);
-			}
+				animate();
+			} catch (e) { console.error(e); }
 		}
 
-		function animate(time) {
+		function animate() {
 			requestAnimationFrame(animate);
-
+			const time = performance.now();
 			if (danceData && danceData.length > 0) {
-				let currentTime = 0;
-				if (audioStarted && !audio.paused) currentTime = audio.currentTime;
-				else currentTime = (time - startTime) / 1000;
-
-				const frameIndex = Math.floor(currentTime * 30) % danceData.length;
-				const frame = danceData[frameIndex];
-
+				const currentTime = audioStarted ? audio.currentTime : (time - startTime) / 1000;
+				const frame = danceData[Math.floor(currentTime * 30) % danceData.length];
 				leftRobot.applyPose(frame);
 				rightRobot.applyPose(frame);
 			}
 
-			// Visualizer Logic - Rainbow Blocks
 			const bandVolumes = new Array(12).fill(0);
 			if (audioStarted && analyser) {
 				analyser.getByteFrequencyData(dataArray);
-
-				// Volume compensation - adjust for audio volume slider
-				const vol = Math.max(audio.volume, 0.05);
-				const compensation = 1.0 / vol;
-
 				const binSize = Math.floor(dataArray.length / 12);
 				for (let r = 0; r < 12; r++) {
 					let sum = 0;
 					for (let i = 0; i < binSize; i++) sum += dataArray[r * binSize + i];
-					let rawVal = (sum / binSize) / 255;
-					// Boost signal then apply volume compensation
-					bandVolumes[r] = Math.min(rawVal * 1.6 * compensation, 1.0);
+					bandVolumes[r] = (sum / binSize) / 255;
 				}
-
-				// Bass dampening - prevent bass from overpowering
-				bandVolumes[0] *= 0.6;
-				bandVolumes[1] *= 0.7;
-				bandVolumes[2] *= 0.8;
 			}
 
-			// Update rainbow blocks
 			for (let r = 0; r < 12; r++) {
 				const rowVol = bandVolumes[mapping[r]] || 0;
 				const halfW = 7 + (rowVol * 41);
 				const start = Math.floor(centerCol - halfW);
 				const end = Math.ceil(centerCol + halfW);
-
-				// Smooth peak tracking
-				if (rowPeaks[r].left > start) rowPeaks[r].left -= 1.0;
-				if (rowPeaks[r].left < start) rowPeaks[r].left = start;
-				if (rowPeaks[r].right < end) rowPeaks[r].right += 1.0;
-				if (rowPeaks[r].right > end) rowPeaks[r].right = end;
-
 				for (let c = 0; c < columns; c++) {
-					const blockData = blocks[c][r];
-					let isLit = (c >= start && c <= end);
-					let isLeader = (c === Math.floor(rowPeaks[r].left) || c === Math.floor(rowPeaks[r].right));
-					const colorScalar = (c - start) / (end - start || 1);
-
-					if (isLit || isLeader) {
-						blockData.material.opacity = 0.9;
-						blockData.material.emissive.copy(getRainbowColor(colorScalar));
-						// Dynamic intensity based on volume, capped below bloom threshold
-						const rawIntensity = 0.8 + (rowVol * 0.5);
-						blockData.material.emissiveIntensity = isLeader ? 0.95 : Math.min(rawIntensity, 0.9);
+					const block = blocks[c][r];
+					if (c >= start && c <= end) {
+						block.material.opacity = 0.9;
+						block.material.emissive.copy(getRainbowColor((c - start) / (end - start || 1)));
+						block.material.emissiveIntensity = 0.8 + rowVol * 0.5;
 					} else {
-						blockData.material.opacity = 0.05;
-						blockData.material.emissiveIntensity = 0;
-						blockData.material.emissive.setHex(0x000000);
+						block.material.opacity = 0.05;
+						block.material.emissive.setHex(0x000000);
 					}
 				}
 			}
 
 			if (noteSystem) noteSystem.update(0.016);
 			if (svgSystem) svgSystem.update(0.016);
-
 			composer.render();
 		}
+
+		function setupSVGEditor() {
+			const inputs = {
+				scale: document.getElementById('svg-scale'),
+				color: document.getElementById('svg-color'),
+				glow: document.getElementById('svg-glow'),
+				radius: document.getElementById('bloom-radius'),
+				strength: document.getElementById('bloom-strength'),
+				threshold: document.getElementById('bloom-threshold'),
+				tilt: document.getElementById('svg-tilt'),
+				z: document.getElementById('svg-z'),
+				y: document.getElementById('svg-y'),
+				drift: document.getElementById('drift-speed'),
+				redBeam: document.getElementById('red-beam'),
+				beamFeather: document.getElementById('beam-feather')
+			};
+			const readout = document.getElementById('svg-readout');
+			const toggleBtn = document.getElementById('btn-builder-toggle');
+			const panel = document.getElementById('svg-panel');
+			const builderBtn = document.getElementById('btn-lock');
+			const builderPanel = document.getElementById('builder-panel');
+
+			toggleBtn.addEventListener('click', () => {
+				panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+				builderPanel.classList.add('hidden');
+			});
+			builderBtn.addEventListener('click', () => {
+				builderPanel.classList.toggle('hidden');
+				panel.style.display = 'none';
+			});
+			document.getElementById('btn-cancel').addEventListener('click', () => builderPanel.classList.add('hidden'));
+
+			function updateSVG() {
+				bloomPass.radius = parseFloat(inputs.radius.value);
+				bloomPass.strength = parseFloat(inputs.strength.value);
+				bloomPass.threshold = parseFloat(inputs.threshold.value);
+				if (!svgSystem?.loadedMesh) return;
+				svgSystem.config.z = parseFloat(inputs.z.value);
+				svgSystem.config.y = parseFloat(inputs.y.value);
+				svgSystem.config.drift = parseFloat(inputs.drift.value);
+				svgSystem.config.redBeam = parseFloat(inputs.redBeam.value);
+				svgSystem.config.beamFeather = parseFloat(inputs.beamFeather.value);
+				svgSystem.loadedMesh.scale.setScalar(parseFloat(inputs.scale.value));
+				svgSystem.loadedMesh.rotation.z = parseFloat(inputs.tilt.value);
+				svgSystem.updateTexture(inputs.color.value, svgSystem.config.redBeam, svgSystem.config.beamFeather);
+				const g = parseFloat(inputs.glow.value);
+				svgSystem.loadedMesh.traverse(n => {
+					if (n.isPointLight) n.intensity = g * 6;
+					if (n.isMesh && n.name === "CoreLetter") n.material.emissiveIntensity = g;
+				});
+				readout.innerText = `svgSystem.config = ${JSON.stringify(svgSystem.config, null, 2)};\nbloomPass.threshold = ${bloomPass.threshold};\nbloomPass.strength = ${bloomPass.strength};\nbloomPass.radius = ${bloomPass.radius};`;
+			}
+			Object.values(inputs).forEach(i => i.addEventListener('input', updateSVG));
+			window.addEventListener('svg-loaded', () => setTimeout(updateSVG, 100));
+		}
+
+		function setupRobotEditor() {
+			const robots = {
+				left: { obj: leftRobot, x: document.getElementById('l-pos-x'), y: document.getElementById('l-pos-y'), z: document.getElementById('l-pos-z'), rotY: document.getElementById('l-rot-y') },
+				right: { obj: rightRobot, x: document.getElementById('r-pos-x'), y: document.getElementById('r-pos-y'), z: document.getElementById('r-pos-z'), rotY: document.getElementById('r-rot-y') }
+			};
+			const readout = document.getElementById('robot-readout');
+			function updateRobots() {
+				[robots.left, robots.right].forEach(r => {
+					if (!r.obj?.group) return;
+					r.obj.group.position.set(parseFloat(r.x.value), parseFloat(r.y.value), parseFloat(r.z.value));
+					r.obj.group.rotation.y = parseFloat(r.rotY.value);
+				});
+				readout.innerText = `leftRobot.group.position.set(${robots.left.x.value}, ${robots.left.y.value}, ${robots.left.z.value});\nleftRobot.group.rotation.y = ${robots.left.rotY.value};\nrightRobot.group.position.set(${robots.right.x.value}, ${robots.right.y.value}, ${robots.right.z.value});\nrightRobot.group.rotation.y = ${robots.right.rotY.value};`;
+			}
+			[...Object.values(robots.left), ...Object.values(robots.right)].forEach(el => { if (el instanceof HTMLElement) el.addEventListener('input', updateRobots); });
+			setTimeout(updateRobots, 500);
+		}
+
+		setupSVGEditor();
+		setupRobotEditor();
+		startAnimation();
 
 		window.addEventListener('resize', () => {
 			camera.aspect = window.innerWidth / window.innerHeight;
@@ -851,75 +671,6 @@
 			renderer.setSize(window.innerWidth, window.innerHeight);
 			composer.setSize(window.innerWidth, window.innerHeight);
 		});
-
-		// --- SVG EDITOR LOGIC ---
-		function setupSVGEditor() {
-			const scaleInput = document.getElementById('svg-scale');
-			const colorInput = document.getElementById('svg-color');
-			const glowInput = document.getElementById('svg-glow');
-			const radiusInput = document.getElementById('bloom-radius');
-			const strengthInput = document.getElementById('bloom-strength');
-			const thresholdInput = document.getElementById('bloom-threshold');
-			const tiltInput = document.getElementById('svg-tilt');
-			const zInput = document.getElementById('svg-z');
-			const yInput = document.getElementById('svg-y');
-			const driftInput = document.getElementById('drift-speed');
-			const redBeamInput = document.getElementById('red-beam');
-			const beamFeatherInput = document.getElementById('beam-feather');
-			const saveBtn = document.getElementById('btn-save-svg');
-			const toggleBtn = document.getElementById('btn-builder-toggle');
-			const panel = document.getElementById('svg-panel');
-
-			toggleBtn.addEventListener('click', () => {
-				panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-			});
-
-			function updateSVG() {
-				if (!bloomPass) return;
-				bloomPass.radius = parseFloat(radiusInput.value);
-				bloomPass.strength = parseFloat(strengthInput.value);
-				bloomPass.threshold = parseFloat(thresholdInput.value);
-
-				if (!svgSystem || !svgSystem.loadedMesh || !svgSystem.config) return;
-
-				svgSystem.config.z = parseFloat(zInput.value);
-				svgSystem.config.y = parseFloat(yInput.value);
-				svgSystem.config.drift = parseFloat(driftInput.value);
-				svgSystem.config.redBeam = parseFloat(redBeamInput.value);
-				svgSystem.config.beamFeather = parseFloat(beamFeatherInput.value);
-
-				svgSystem.loadedMesh.scale.setScalar(parseFloat(scaleInput.value));
-				svgSystem.loadedMesh.rotation.z = parseFloat(tiltInput.value);
-
-				svgSystem.updateTexture(colorInput.value, svgSystem.config.redBeam, svgSystem.config.beamFeather);
-
-				const glow = parseFloat(glowInput.value);
-				svgSystem.loadedMesh.traverse(node => {
-					if (node.isPointLight) node.intensity = glow * 6;
-					if (node.isMesh && node.name === "CoreLetter") node.material.emissiveIntensity = glow;
-				});
-			}
-
-			[scaleInput, colorInput, glowInput, radiusInput, strengthInput, thresholdInput, tiltInput, zInput, yInput, driftInput, redBeamInput, beamFeatherInput].forEach(el => {
-				el.addEventListener('input', updateSVG);
-			});
-
-			saveBtn.addEventListener('click', () => {
-				const config = {
-					scale: scaleInput.value, color: colorInput.value, glow: glowInput.value,
-					radius: radiusInput.value, strength: strengthInput.value, threshold: thresholdInput.value,
-					tilt: tiltInput.value, z: zInput.value, y: yInput.value, drift: driftInput.value,
-					redBeam: redBeamInput.value, beamFeather: beamFeatherInput.value
-				};
-				localStorage.setItem('svgConfig', JSON.stringify(config));
-				alert("Aesthetic configuration saved!");
-			});
-
-			window.addEventListener('svg-loaded', () => setTimeout(updateSVG, 100));
-		}
-
-		setupSVGEditor();
-		startAnimation();
 	</script>
 </body>
 

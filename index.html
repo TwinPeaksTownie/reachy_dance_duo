@@ -236,6 +236,63 @@
 			transform: scale(1.15);
 		}
 
+		/* --- MONOLITHIC EDITOR STYLES --- */
+		.nudge-btn {
+			width: 25px;
+			height: 25px;
+			border: 1px solid #0ff;
+			background: rgba(0, 40, 40, 0.5);
+			color: #0ff;
+			cursor: pointer;
+			font-size: 14px;
+			padding: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 4px;
+			margin: 0 5px;
+		}
+
+		.nudge-btn:hover {
+			background: #0ff;
+			color: #000;
+		}
+
+		.tools-row {
+			display: flex;
+			gap: 5px;
+			margin-top: 10px;
+		}
+
+		.tool-btn {
+			flex: 1;
+			background: #222;
+			border: 1px solid #0ff;
+			color: #0ff;
+			cursor: pointer;
+			padding: 5px;
+			font-size: 0.8em;
+		}
+
+		.tool-btn.active {
+			background: #0ff;
+			color: #000;
+		}
+
+		.slide-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin: 5px 0;
+		}
+
+		.slide-val {
+			width: 30px;
+			text-align: right;
+			font-size: 0.8em;
+			color: #fff;
+		}
+
 		#svg-panel {
 			position: absolute;
 			top: 20px;
@@ -330,50 +387,62 @@
 
 		<!-- UI PANELS FOR AESTHETIC FINE-TUNING -->
 		<div id="builder-panel" class="hidden">
-			<h3>Robot Placement</h3>
-			<div class="robot-control-group">
-				<h4>Left Robot</h4>
-				<div class="coord-row"><label>X</label><input type="range" id="l-pos-x" min="-10" max="10" step="0.01"
-						value="-0.87"></div>
-				<div class="coord-row"><label>Y</label><input type="range" id="l-pos-y" min="-5" max="5" step="0.01"
-						value="-1.45"></div>
-				<div class="coord-row"><label>Z</label><input type="range" id="l-pos-z" min="-20" max="5" step="0.1"
-						value="-1.0"></div>
-				<div class="coord-row"><label>Yaw</label><input type="range" id="l-rot-y" min="-3.14" max="3.14"
-						step="0.01" value="-1.08"></div>
-			</div>
-			<div class="robot-control-group">
-				<h4>Right Robot</h4>
-				<div class="coord-row"><label>X</label><input type="range" id="r-pos-x" min="-10" max="10" step="0.01"
-						value="0.80"></div>
-				<div class="coord-row"><label>Y</label><input type="range" id="r-pos-y" min="-5" max="5" step="0.01"
-						value="-1.45"></div>
-				<div class="coord-row"><label>Z</label><input type="range" id="r-pos-z" min="-20" max="5" step="0.1"
-						value="-0.70"></div>
-				<div class="coord-row"><label>Yaw</label><input type="range" id="r-rot-y" min="-3.14" max="3.14"
-						step="0.01" value="-2.07"></div>
-			</div>
+			<h3>Placement Mode</h3>
+			<p>Selected: <span id="builder-target">None</span></p>
 
-			<div class="coord-divider">TOOLS</div>
 			<div class="coord-row">
-				<label>Show Grid</label>
-				<input type="checkbox" id="chk-show-grid">
+				<label>X:</label> <span id="val-x">0.00</span>
 			</div>
 			<div class="coord-row">
-				<label>Snap to Grid</label>
-				<input type="checkbox" id="chk-snap">
+				<label>Y:</label> <span id="val-y">0.00</span>
 			</div>
 			<div class="coord-row">
-				<label>Snap Step</label>
-				<input type="number" id="snap-step" value="0.5" step="0.1"
-					style="width: 50px; background:#222; border:1px solid #444; color:#fff; border-radius:4px;">
+				<label>Z:</label> <span id="val-z">0.00</span>
 			</div>
 
-			<div class="coord-divider">HARD-CODE SNIPPET</div>
-			<pre id="robot-readout">// Robot Coordinates</pre>
+			<div class="coord-divider">ROTATION (Deg)</div>
+			<div class="slide-row">
+				<label>X</label>
+				<button class="nudge-btn" data-axis="x" data-dir="-1">-</button>
+				<input type="range" id="rot-x" min="-180" max="180" step="1">
+				<button class="nudge-btn" data-axis="x" data-dir="1">+</button>
+				<span id="disp-rot-x" class="slide-val">0</span>
+			</div>
+			<div class="slide-row">
+				<label>Y</label>
+				<button class="nudge-btn" data-axis="y" data-dir="-1">-</button>
+				<input type="range" id="rot-y" min="-180" max="180" step="1">
+				<button class="nudge-btn" data-axis="y" data-dir="1">+</button>
+				<span id="disp-rot-y" class="slide-val">0</span>
+			</div>
+			<div class="slide-row">
+				<label>Z</label>
+				<button class="nudge-btn" data-axis="z" data-dir="-1">-</button>
+				<input type="range" id="rot-z" min="-180" max="180" step="1">
+				<button class="nudge-btn" data-axis="z" data-dir="1">+</button>
+				<span id="disp-rot-z" class="slide-val">0</span>
+			</div>
 
-			<button id="btn-lock" class="action-btn">🔓 Lock Position</button>
-			<button id="btn-cancel" class="action-btn secondary">Close</button>
+			<div class="tools-row">
+				<button id="btn-mode-trans" class="tool-btn active">Move</button>
+				<button id="btn-mode-rot" class="tool-btn">Rotate</button>
+			</div>
+
+			<button id="btn-lock" class="action-btn">🔒 Lock Position</button>
+			<button id="btn-cancel" class="action-btn secondary">Cancel</button>
+
+			<div class="coord-divider">ALIGNMENT</div>
+			<div class="tools-row">
+				<button id="btn-snap" class="action-btn secondary" style="margin-top:0;">🧲 Snap to Grid</button>
+			</div>
+
+			<div class="coord-divider">PERSISTENCE</div>
+			<button id="btn-save-disk" class="action-btn" style="background:#44ff44; color:#000;">💾 Save to
+				Disk</button>
+
+			<div class="coord-divider">CAMERA POV</div>
+			<div class="coord-row"><label>Pos:</label> <span id="cam-pos">0, 0, 0</span></div>
+			<div class="coord-row"><label>Rot:</label> <span id="cam-rot">0, 0, 0</span></div>
 		</div>
 
 		<button id="btn-builder-toggle" title="Logo Editor">🛠️</button>
@@ -466,6 +535,7 @@
 	<script type="module">
 		import * as THREE from 'three';
 		import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+		import { TransformControls } from 'three/addons/controls/TransformControls.js';
 		import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 		import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 		import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
@@ -675,126 +745,290 @@
 			window.addEventListener('svg-loaded', () => setTimeout(updateSVG, 100));
 		}
 
+		// --- BUILDER / PLACEMENT MODE ---
+		let transformControl;
+		let builderModeActive = false;
+		let selectedRobotName = null;
+		let ghostObject = null;
+		let originalObject = null;
+		let gridHelper = null;
+		let snapGroup = null;
+		let highlightedSnap = null;
+
+		const raycaster = new THREE.Raycaster();
+		const mouse = new THREE.Vector2();
+
 		function setupRobotEditor() {
-			const robots = {
-				left: { obj: leftRobot, x: document.getElementById('l-pos-x'), y: document.getElementById('l-pos-y'), z: document.getElementById('l-pos-z'), rotY: document.getElementById('l-rot-y') },
-				right: { obj: rightRobot, x: document.getElementById('r-pos-x'), y: document.getElementById('r-pos-y'), z: document.getElementById('r-pos-z'), rotY: document.getElementById('r-rot-y') }
-			};
-			const readout = document.getElementById('robot-readout');
-			const robotToggle = document.getElementById('btn-robot-toggle');
+			// UI Elements
 			const builderPanel = document.getElementById('builder-panel');
-			const showGridCheck = document.getElementById('chk-show-grid');
-			const snapCheck = document.getElementById('chk-snap');
-			const snapStepInput = document.getElementById('snap-step');
+			const builderToggle = document.getElementById('btn-robot-toggle'); // Using Robot Toggle for this
 
-			// Separate Toggle for Robot Panel
-			robotToggle.addEventListener('click', () => {
-				builderPanel.classList.toggle('hidden');
-				document.getElementById('svg-panel').style.display = 'none'; // Close other panel
-				// Enable edit mode visualizer if panel is open?
-			});
-			document.getElementById('btn-cancel').addEventListener('click', () => builderPanel.classList.add('hidden'));
+			const lockBtn = document.getElementById('btn-lock');
+			const cancelBtn = document.getElementById('btn-cancel');
 
-			// Dot Grid Logic
-			const points = [];
-			for (let x = -8; x <= 8; x += 0.5) {
-				for (let z = -12; z <= 5; z += 0.5) {
-					points.push(x, -1.5, z);
-				}
-			}
-			const dotGeometry = new THREE.BufferGeometry();
-			dotGeometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
-			const dotMaterial = new THREE.PointsMaterial({ color: 0x00D1FF, size: 0.04 });
-			const dotGrid = new THREE.Points(dotGeometry, dotMaterial);
-			dotGrid.visible = false;
-			scene.add(dotGrid);
+			// Rotation Sliders
+			const sliderRotX = document.getElementById('rot-x');
+			const sliderRotY = document.getElementById('rot-y');
+			const sliderRotZ = document.getElementById('rot-z');
 
-			if (showGridCheck) showGridCheck.addEventListener('change', (e) => dotGrid.visible = e.target.checked);
+			const btnMove = document.getElementById('btn-mode-trans');
+			const btnRot = document.getElementById('btn-mode-rot');
+			const btnSnap = document.getElementById('btn-snap');
+			const btnSave = document.getElementById('btn-save-disk');
 
-			// Selection Logic (Raycaster)
-			const raycaster = new THREE.Raycaster();
-			const mouse = new THREE.Vector2();
-			const selectionBox = new THREE.BoxHelper(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1)), 0x00FFFF);
-			selectionBox.visible = false;
-			scene.add(selectionBox);
-
-			window.addEventListener('click', (event) => {
-				if (builderPanel.classList.contains('hidden')) return;
-
-				// Calculate mouse position
-				mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-				mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-				raycaster.setFromCamera(mouse, camera);
-
-				// Check intersection with robot groups
-				// Note: complex because groups hold meshes. Simplify by checking distance?
-				// Or traverse meshes. For now, we cycle selection or check simple bounds.
-				// Simple approach: if click near center of robot.
-				// Better:
-				const intersects = raycaster.intersectObjects(scene.children, true);
-				let selected = null;
-				for (let i = 0; i < intersects.length; i++) {
-					// Check if object belongs to a robot
-					let p = intersects[i].object;
-					while (p.parent) {
-						if (p === leftRobot.group) { selected = 'left'; break; }
-						if (p === rightRobot.group) { selected = 'right'; break; }
-						p = p.parent;
-					}
-					if (selected) break;
-				}
-
-				if (selected) {
-					const target = selected === 'left' ? leftRobot : rightRobot;
-
-					// Highlight visual
-					selectionBox.setFromObject(target.group);
-					selectionBox.visible = true;
-
-					// Could auto-focus controls here if we wanted
+			// Toggle Panel Logic
+			builderToggle.addEventListener('click', () => {
+				const isHidden = builderPanel.classList.contains('hidden');
+				if (isHidden) {
+					builderPanel.classList.remove('hidden');
+					document.getElementById('svg-panel').style.display = 'none';
+					initBuilderMode();
 				} else {
-					// Maybe clear selection if clicking void?
-					// selectionBox.visible = false;
+					exitBuilderMode(); // Also closes panel
 				}
 			});
 
+			// Gizmo Mode Toggles
+			btnMove.addEventListener('click', () => {
+				if (transformControl) transformControl.setMode('translate');
+				btnMove.classList.add('active');
+				btnRot.classList.remove('active');
+			});
+			btnRot.addEventListener('click', () => {
+				if (transformControl) transformControl.setMode('rotate');
+				btnRot.classList.add('active');
+				btnMove.classList.remove('active');
+			});
 
-			function updateRobots() {
-				const isSnap = snapCheck ? snapCheck.checked : false;
-				const step = snapStepInput ? parseFloat(snapStepInput.value) : 0.5;
+			// Slider Logic
+			function onSliderChange() {
+				if (!ghostObject) return;
+				const rx = parseFloat(sliderRotX.value);
+				const ry = parseFloat(sliderRotY.value);
+				const rz = parseFloat(sliderRotZ.value);
 
-				[robots.left, robots.right].forEach(r => {
-					if (!r.obj?.group) return;
+				ghostObject.rotation.x = THREE.MathUtils.degToRad(rx);
+				ghostObject.rotation.y = THREE.MathUtils.degToRad(ry);
+				ghostObject.rotation.z = THREE.MathUtils.degToRad(rz);
 
-					let x = parseFloat(r.x.value);
-					let y = parseFloat(r.y.value);
-					let z = parseFloat(r.z.value);
-					let rot = parseFloat(r.rotY.value);
+				document.getElementById('disp-rot-x').innerText = rx.toFixed(0);
+				document.getElementById('disp-rot-y').innerText = ry.toFixed(0);
+				document.getElementById('disp-rot-z').innerText = rz.toFixed(0);
+			}
+			sliderRotX.addEventListener('input', onSliderChange);
+			sliderRotY.addEventListener('input', onSliderChange);
+			sliderRotZ.addEventListener('input', onSliderChange);
 
-					if (isSnap) {
-						x = Math.round(x / step) * step;
-						y = Math.round(y / step) * step;
-						z = Math.round(z / step) * step;
-					}
+			// Nudge Button Logic
+			document.querySelectorAll('.nudge-btn').forEach(btn => {
+				btn.addEventListener('click', (e) => {
+					if (!ghostObject) return;
+					const axis = btn.getAttribute('data-axis');
+					const dir = parseInt(btn.getAttribute('data-dir'));
+					const slider = document.getElementById(`rot-${axis}`);
 
-					r.obj.group.position.set(x, y, z);
-					r.obj.group.rotation.y = rot;
+					let val = parseInt(slider.value) + dir;
+					if (val > 180) val = -180;
+					if (val < -180) val = 180;
 
-					// Update helper if visible and matching
+					slider.value = val;
+					onSliderChange();
 				});
+			});
 
-				readout.innerText = `leftRobot.group.position.set(${robots.left.obj.group.position.x.toFixed(2)}, ${robots.left.obj.group.position.y.toFixed(2)}, ${robots.left.obj.group.position.z.toFixed(2)});\n` +
-					`leftRobot.group.rotation.y = ${robots.left.obj.group.rotation.y.toFixed(2)};\n` +
-					`rightRobot.group.position.set(${robots.right.obj.group.position.x.toFixed(2)}, ${robots.right.obj.group.position.y.toFixed(2)}, ${robots.right.obj.group.position.z.toFixed(2)});\n` +
-					`rightRobot.group.rotation.y = ${robots.right.obj.group.rotation.y.toFixed(2)};`;
+			btnSnap.addEventListener('click', () => {
+				if (!ghostObject) return;
+				// Snap Position to nearest 0.5m grid
+				ghostObject.position.x = Math.round(ghostObject.position.x * 2) / 2;
+				ghostObject.position.z = Math.round(ghostObject.position.z * 2) / 2;
+				ghostObject.position.y = -1.45; // Floor level
+
+				// Snap Rotations to nearest 90 degrees
+				const snap90 = (val) => Math.round(val / (Math.PI / 2)) * (Math.PI / 2);
+				ghostObject.rotation.set(snap90(ghostObject.rotation.x), snap90(ghostObject.rotation.y), snap90(ghostObject.rotation.z));
+				updateBuilderUI();
+			});
+
+			btnSave.addEventListener('click', () => {
+				const config = {
+					robots: {
+						"Left": { position: leftRobot.group.position.toArray(), rotation: leftRobot.group.rotation.toArray().slice(0, 3) },
+						"Right": { position: rightRobot.group.position.toArray(), rotation: rightRobot.group.rotation.toArray().slice(0, 3) }
+					},
+					camera: { position: camera.position.toArray(), target: controls.target.toArray() }
+				};
+				console.log("💾 CONFIG TO SAVE:", JSON.stringify(config, null, 2));
+				alert("Config logged to console! (Copy it to robot_config.json)");
+			});
+
+			lockBtn.addEventListener('click', () => {
+				if (ghostObject && originalObject) {
+					originalObject.position.copy(ghostObject.position);
+					originalObject.rotation.copy(ghostObject.rotation);
+					discardGhost();
+				}
+			});
+
+			cancelBtn.addEventListener('click', discardGhost);
+		}
+
+		function initBuilderMode() {
+			if (!transformControl) {
+				transformControl = new TransformControls(camera, renderer.domElement);
+				transformControl.addEventListener('dragging-changed', (event) => controls.enabled = !event.value);
+				transformControl.addEventListener('change', updateBuilderUI);
+				scene.add(transformControl);
 			}
 
-			[...Object.values(robots.left), ...Object.values(robots.right)].forEach(el => { if (el instanceof HTMLElement) el.addEventListener('input', updateRobots); });
-			if (snapCheck) snapCheck.addEventListener('change', updateRobots);
-			if (snapStepInput) snapStepInput.addEventListener('input', updateRobots);
+			// Interactive Grid (Spheres)
+			if (!snapGroup) {
+				snapGroup = new THREE.Group();
+				const snapGeo = new THREE.SphereGeometry(0.05, 8, 8);
+				const snapMat = new THREE.MeshBasicMaterial({ color: 0x888888, transparent: true, opacity: 0.3 });
 
-			setTimeout(updateRobots, 500);
+				for (let x = -10; x <= 10; x++) {
+					for (let z = -10; z <= 10; z++) {
+						const dot = new THREE.Mesh(snapGeo, snapMat.clone());
+						dot.position.set(x, -1.5, z);
+						snapGroup.add(dot);
+					}
+				}
+				scene.add(snapGroup);
+			}
+
+			transformControl.enabled = true;
+			document.body.style.cursor = 'crosshair';
+			window.addEventListener('click', onBuilderClick);
+			window.addEventListener('mousemove', onBuilderMove);
+		}
+
+		function exitBuilderMode() {
+			if (transformControl) { transformControl.detach(); transformControl.enabled = false; }
+			if (ghostObject) discardGhost();
+			if (snapGroup) { scene.remove(snapGroup); snapGroup = null; }
+
+			document.getElementById('builder-panel').classList.add('hidden');
+			window.removeEventListener('click', onBuilderClick);
+			window.removeEventListener('mousemove', onBuilderMove);
+			document.body.style.cursor = 'default';
+		}
+
+		function onBuilderMove(event) {
+			if (!snapGroup) return;
+			// Raycast for hover effect
+			mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+			mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+			raycaster.setFromCamera(mouse, camera);
+
+			if (highlightedSnap) {
+				highlightedSnap.material.opacity = 0.3;
+				highlightedSnap.material.color.setHex(0x888888);
+				highlightedSnap.scale.set(1, 1, 1);
+				highlightedSnap = null;
+			}
+
+			const intersects = raycaster.intersectObjects(snapGroup.children);
+			if (intersects.length > 0) {
+				highlightedSnap = intersects[0].object;
+				highlightedSnap.material.opacity = 1.0;
+				highlightedSnap.material.color.setHex(0x00FFFF);
+				highlightedSnap.scale.set(2.5, 2.5, 2.5);
+			}
+
+			// Camera Readout Update
+			const r2d = (r) => (r * (180 / Math.PI)).toFixed(1);
+			document.getElementById('cam-pos').innerText = `${camera.position.x.toFixed(2)}, ${camera.position.y.toFixed(2)}, ${camera.position.z.toFixed(2)}`;
+			document.getElementById('cam-rot').innerText = `${r2d(camera.rotation.x)}, ${r2d(camera.rotation.y)}, ${r2d(camera.rotation.z)}`;
+		}
+
+		function onBuilderClick(event) {
+			if (document.getElementById('builder-panel').classList.contains('hidden')) return;
+
+			mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+			mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+			raycaster.setFromCamera(mouse, camera);
+
+			// 1. Check Snap Points
+			if (ghostObject && snapGroup) {
+				const intersects = raycaster.intersectObjects(snapGroup.children);
+				if (intersects.length > 0) {
+					const pt = intersects[0].object.position;
+					ghostObject.position.set(pt.x, -1.45, pt.z);
+					updateBuilderUI();
+					return;
+				}
+			}
+
+			if (ghostObject) return; // Already editing?
+
+			// 2. Select Robot
+			const intersects = raycaster.intersectObjects([leftRobot.group, rightRobot.group], true);
+			if (intersects.length > 0) {
+				let hit = intersects[0].object;
+				// Walk up to find group
+				while (hit.parent && hit !== leftRobot.group && hit !== rightRobot.group) hit = hit.parent;
+				const robot = (hit === leftRobot.group) ? leftRobot : rightRobot;
+				selectForEditing(robot);
+			}
+		}
+
+		function selectForEditing(robot) {
+			selectedRobotName = robot.name;
+			originalObject = robot.group;
+			ghostObject = originalObject.clone();
+
+			// Fix Ghost Material (Teal)
+			const tealMat = new THREE.MeshBasicMaterial({ color: 0x00FFFF, wireframe: true, transparent: true, opacity: 0.3 });
+			ghostObject.traverse(c => { if (c.isMesh) c.material = tealMat; });
+
+			// Green Pancake Magnet
+			const magGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.002, 32);
+			const magMat = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+			const magMesh = new THREE.Mesh(magGeo, magMat);
+			magMesh.rotation.x = Math.PI / 2; // Flat
+			// Center at bottom
+			const box = new THREE.Box3().setFromObject(ghostObject);
+			const center = box.getCenter(new THREE.Vector3());
+			magMesh.position.set(center.x, box.min.y, center.z);
+			ghostObject.add(magMesh);
+
+			// Axis Lines
+			const addAxis = (p1, p2, col) => {
+				const g = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+				const m = new THREE.LineBasicMaterial({ color: col });
+				ghostObject.add(new THREE.Line(g, m));
+			};
+			addAxis(new THREE.Vector3(-100, 0, 0), new THREE.Vector3(100, 0, 0), 0xffff00); // X Yellow
+			addAxis(new THREE.Vector3(0, -100, 0), new THREE.Vector3(0, 100, 0), 0x0000ff); // Y Blue
+			addAxis(new THREE.Vector3(0, 0, -100), new THREE.Vector3(0, 0, 100), 0xff00ff); // Z Magenta
+
+			scene.add(ghostObject);
+			transformControl.attach(ghostObject);
+
+			document.getElementById('builder-target').innerText = robot.name;
+			updateBuilderUI();
+		}
+
+		function updateBuilderUI() {
+			if (!ghostObject) return;
+			document.getElementById('val-x').innerText = ghostObject.position.x.toFixed(2);
+			document.getElementById('val-y').innerText = ghostObject.position.y.toFixed(2);
+			document.getElementById('val-z').innerText = ghostObject.position.z.toFixed(2);
+
+			const d = (r) => THREE.MathUtils.radToDeg(r).toFixed(0);
+			document.getElementById('rot-x').value = d(ghostObject.rotation.x);
+			document.getElementById('rot-y').value = d(ghostObject.rotation.y);
+			document.getElementById('rot-z').value = d(ghostObject.rotation.z);
+
+			document.getElementById('disp-rot-x').innerText = d(ghostObject.rotation.x);
+			document.getElementById('disp-rot-y').innerText = d(ghostObject.rotation.y);
+			document.getElementById('disp-rot-z').innerText = d(ghostObject.rotation.z);
+		}
+
+		function discardGhost() {
+			if (transformControl) transformControl.detach();
+			if (ghostObject) { scene.remove(ghostObject); ghostObject = null; }
+			document.getElementById('builder-target').innerText = "None";
 		}
 
 		setupSVGEditor();

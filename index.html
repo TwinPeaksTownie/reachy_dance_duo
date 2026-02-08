@@ -191,9 +191,7 @@
 		}
 
 		#btn-builder-toggle {
-			position: fixed;
-			bottom: 30px;
-			right: 30px;
+			position: relative;
 			background: rgba(0, 0, 0, 0.7);
 			border: 1px solid #0ff;
 			border-radius: 50%;
@@ -214,9 +212,7 @@
 		}
 
 		#btn-robot-toggle {
-			position: fixed;
-			bottom: 90px;
-			right: 30px;
+			position: relative;
 			background: rgba(20, 0, 20, 0.7);
 			border: 1px solid #f0f;
 			border-radius: 50%;
@@ -234,6 +230,54 @@
 			color: #000;
 			box-shadow: 0 0 25px #f0f;
 			transform: scale(1.15);
+		}
+
+		.tool-label-group {
+			position: fixed;
+			right: 30px;
+			z-index: 999;
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+
+		.tool-label-group.top {
+			bottom: 90px;
+		}
+
+		.tool-label-group.bottom {
+			bottom: 30px;
+		}
+
+		.tool-label {
+			background: rgba(0, 0, 0, 0.75);
+			backdrop-filter: blur(8px);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			border-radius: 10px;
+			padding: 10px 14px;
+			max-width: 220px;
+			font-size: 0.75rem;
+			color: var(--text-dim);
+			line-height: 1.5;
+			opacity: 0;
+			transform: translateX(10px);
+			transition: opacity 0.3s ease, transform 0.3s ease;
+			pointer-events: none;
+			position: absolute;
+			right: 62px;
+			white-space: normal;
+		}
+
+		.tool-label strong {
+			color: var(--text-main);
+			display: block;
+			margin-bottom: 3px;
+			font-size: 0.8rem;
+		}
+
+		.tool-label-group:hover .tool-label {
+			opacity: 1;
+			transform: translateX(0);
 		}
 
 		/* --- MONOLITHIC EDITOR STYLES --- */
@@ -354,8 +398,14 @@
 
 		.grid {
 			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+			grid-template-columns: repeat(2, 1fr);
 			gap: 2rem;
+		}
+
+		@media (max-width: 600px) {
+			.grid {
+				grid-template-columns: 1fr;
+			}
 		}
 
 		.card {
@@ -445,8 +495,20 @@
 			<div class="coord-row"><label>Rot:</label> <span id="cam-rot">0, 0, 0</span></div>
 		</div>
 
-		<button id="btn-builder-toggle" title="Logo Editor">🛠️</button>
-		<button id="btn-robot-toggle" title="Robot Placement">🤖</button>
+		<div class="tool-label-group top">
+			<div class="tool-label">
+				<strong>Robot Placement</strong>
+				Grid layout for easy placement to an affixed surface, with a mesh visualizer. A customization tool used to build this interface&mdash;available as a reference for anyone wanting to reuse what they see here.
+			</div>
+			<button id="btn-robot-toggle" title="Robot Placement">🤖</button>
+		</div>
+		<div class="tool-label-group bottom">
+			<div class="tool-label">
+				<strong>Logo Editor</strong>
+				Fine-tune scale, color, glow, bloom, and positioning to craft a polished logo. A customization tool used to build this interface&mdash;available as a reference for anyone wanting to reuse what they see here.
+			</div>
+			<button id="btn-builder-toggle" title="Logo Editor">🛠️</button>
+		</div>
 
 		<div id="svg-panel" style="display: none;">
 			<h3>Logo Editor</h3>
@@ -492,32 +554,35 @@
 		<div class="grid">
 			<div class="card">
 				<div class="step-num">1</div>
-				<h3>Connect</h3>
-				<p>Launch the app from your Reachy Mini dashboard. The 3D visualizer will automatically link to your
-					robot sensors.</p>
+				<h3>Start the App</h3>
+				<p>Launch Reachy Dance Duo from the dashboard. No API keys, no cloud inference, no heavy
+					processing&mdash;everything runs locally on the robot.</p>
 			</div>
 			<div class="card">
 				<div class="step-num">2</div>
 				<h3>Pick a Mode</h3>
-				<p>Choose <strong>Live Groove</strong> to dance to ambient sounds, or <strong>Beat Bandit</strong> to
-					choreograph to tracks.</p>
+				<p>Choose <strong>Live Groove</strong> for real-time analysis of ambient music with targeted beat
+					detection, or <strong>Beat Bandit</strong> where Reachy sails the high seas of YouTube to
+					procure your content.</p>
 			</div>
 			<div class="card">
 				<div class="step-num">3</div>
-				<h3>Customize</h3>
-				<p>Adjust intensity, amplitude, and safety parameters in real-time. Watch the robots react in the
-					visualizer.</p>
+				<h3>Play Your Music</h3>
+				<p>In <strong>Live Groove</strong>, tempo and beats are measured live as music plays. In
+					<strong>Beat Bandit</strong>, the entire song is analyzed and a full dance sequence is
+					choreographed before playback begins.</p>
 			</div>
 			<div class="card">
 				<div class="step-num">4</div>
 				<h3>Dance!</h3>
-				<p>Hit start and watch Reachy Mini perform. The dual-robot kinematics ensure smooth, expressive
-					movements.</p>
+				<p>Sit back and watch Reachy Mini move. The choreography plays in sync with the audio for smooth,
+					expressive movements.</p>
 			</div>
 		</div>
 	</section>
 
 	<footer>
+		<p style="margin-bottom: 0.5rem;">If you enjoy this app, a like on the Space helps us compete in the <strong>Nvidia GTC Contest</strong>!</p>
 		<p>&copy; 2026 Pollen Robotics. Built for Reachy Mini.</p>
 	</footer>
 

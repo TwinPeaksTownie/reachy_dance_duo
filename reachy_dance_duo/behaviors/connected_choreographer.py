@@ -361,29 +361,68 @@ class YouTubeDownloader:
         except Exception:
             pass  # If reconfigure fails, continue with original encoding
 
-        # Ensure homebrew bins are in PATH for JS runtime (deno/node) detection on Mac
-        if sys.platform == "darwin":
-            extra_paths = ["/opt/homebrew/bin", "/usr/local/bin"]
-            current_path = os.environ.get("PATH", "")
-            for p in extra_paths:
-                if p not in current_path and os.path.isdir(p):
-                    current_path = f"{p}:{current_path}"
-            os.environ["PATH"] = current_path
+        # Ensure common binary paths are in PATH for JS runtime (deno/node) detection
+        extra_paths = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin",
+                       os.path.expanduser("~/.deno/bin"), os.path.expanduser("~/.local/bin")]
+        current_path = os.environ.get("PATH", "")
+        for p in extra_paths:
+            if p not in current_path and os.path.isdir(p):
+                current_path = f"{p}:{current_path}"
+        os.environ["PATH"] = current_path
 
         # Explicitly find deno/node paths for js_runtimes
-        import shutil
-        deno_path = shutil.which("deno")
-        node_path = shutil.which("node")
-        
-        # Fallback for Mac dev environment if shutil.which fails due to PATH issues
-        if not deno_path and sys.platform == "darwin" and os.path.exists("/opt/homebrew/bin/deno"):
-            deno_path = "/opt/homebrew/bin/deno"
-        
+        import shutil as _shutil
+        deno_path = _shutil.which("deno")
+        node_path = _shutil.which("node")
+
+        # Platform-specific fallbacks if shutil.which fails
+        if not deno_path:
+            fallback_paths = []
+            if sys.platform == "darwin":
+                fallback_paths = ["/opt/homebrew/bin/deno"]
+            else:
+                fallback_paths = [
+                    os.path.expanduser("~/.deno/bin/deno"),
+                    "/usr/local/bin/deno",
+                    "/usr/bin/deno",
+                ]
+            for fp in fallback_paths:
+                if os.path.exists(fp):
+                    deno_path = fp
+                    break
+
+        if not node_path:
+            fallback_paths = ["/usr/bin/node", "/usr/local/bin/node"]
+            for fp in fallback_paths:
+                if os.path.exists(fp):
+                    node_path = fp
+                    break
+
+        # If no JS runtime found at all, try to install deno
+        if not deno_path and not node_path:
+            logger.warning("[YouTubeDownloader] No JS runtime (deno/node) found. Attempting to install deno...")
+            try:
+                subprocess.run(
+                    ["sh", "-c", "curl -fsSL https://deno.land/install.sh | sh"],
+                    capture_output=True, timeout=60,
+                )
+                deno_candidate = os.path.expanduser("~/.deno/bin/deno")
+                if os.path.exists(deno_candidate):
+                    deno_path = deno_candidate
+                    logger.info(f"[YouTubeDownloader] Installed deno at {deno_path}")
+                else:
+                    logger.error("[YouTubeDownloader] deno install completed but binary not found")
+            except Exception as e:
+                logger.error(f"[YouTubeDownloader] Failed to install deno: {e}")
+
         js_runtimes = {}
         if deno_path:
             js_runtimes["deno"] = {"executable": deno_path}
         if node_path:
             js_runtimes["node"] = {"executable": node_path}
+
+        if not js_runtimes:
+            logger.error("[YouTubeDownloader] No JS runtime available. YouTube downloads may fail with 403.")
 
         try:
             import yt_dlp  # type: ignore

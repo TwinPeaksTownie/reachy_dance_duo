@@ -28,9 +28,11 @@ def _get_app_url(port: int = 9000) -> str:
 
     Wireless Reachy Minis are accessed via mDNS (e.g. reachy-mini.local),
     so the dashboard tab needs to point there instead of localhost.
+    Try the mDNS hostname first since wireless is the common case.
     """
     hostname = socket.gethostname()
-    if hostname and not hostname.startswith("localhost"):
+    # Default to mDNS — wireless Reachy is the primary use case
+    if hostname and hostname != "localhost":
         return f"http://{hostname}.local:{port}"
     return f"http://localhost:{port}"
 

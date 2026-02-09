@@ -68,14 +68,6 @@ def initialize_with_robot(mini: ReachyMini) -> None:
     # Initialize MotionController (for face tracking, breathing, layered motion)
     # Note: Don't start the motion loop here - it starts when System Audio mode activates
     state.motion_controller = MotionController(state.mini, enabled=True)
-    if state.motion_controller.init_head_tracker(device="mps"):
-        logger.info(
-            "[UltraDanceMix9000] MotionController head tracker initialized (MPS)"
-        )
-    else:
-        logger.warning(
-            "[UltraDanceMix9000] MotionController head tracker init failed - face tracking disabled"
-        )
     logger.info(
         "[UltraDanceMix9000] MotionController ready (starts with System Audio mode)"
     )

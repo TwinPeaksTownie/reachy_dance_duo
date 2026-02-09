@@ -83,12 +83,6 @@ def run_cli(mode: str, url: Optional[str] = None):
             from .core.motion_controller import MotionController
 
             motion_controller = MotionController(mini, enabled=True)
-            if motion_controller.init_head_tracker(device="mps"):
-                logger.info("MotionController head tracker initialized (MPS)")
-            else:
-                logger.error(
-                    "MotionController head tracker failed - face tracking disabled"
-                )
 
         # Create and start the requested mode
         dance_mode: DanceMode

@@ -28,8 +28,6 @@ dependencies = [
     "ytmusicapi>=1.11.0",
     "eclipse-zenoh>=1.0.0",
     "reachy-mini-dances-library",
-    "ultralytics>=8.0.0",
-    "supervision>=0.19.0",
     "huggingface_hub>=0.20.0",
 
     "PyYAML>=6.0",  # Used by vendored audyn models for config loading

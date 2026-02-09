@@ -1,9 +1,8 @@
 """Motion Controller for Reachy Ultradancemix 9000.
 
 Implements:
-- Face tracking with YOLO detection
 - Breathing motion (roll + antenna sway)
-- Euler composition (breathing roll + face pitch/yaw)
+- Euler composition (breathing roll + pitch/yaw)
 - Body anchor system (ANCHORED/SYNCING/STABILIZING)
 
 Based on the reachy_live_vlm motion controller - the one that "feels alive".
@@ -25,101 +24,6 @@ if TYPE_CHECKING:
     from reachy_mini import ReachyMini  # pyright: ignore[reportMissingImports]
 
 logger = logging.getLogger(__name__)
-
-
-# ============================================================================
-# HeadTracker - YOLO Face Detection
-# ============================================================================
-
-
-class HeadTracker:
-    """Lightweight head tracker using YOLO for face detection."""
-
-    def __init__(
-        self,
-        model_repo: str = "AdamCodd/YOLOv11n-face-detection",
-        model_filename: str = "model.pt",
-        confidence_threshold: float = 0.3,
-        device: str = "cpu",
-    ) -> None:
-        """Initialize YOLO-based head tracker."""
-        self.confidence_threshold = confidence_threshold
-        self.model = None
-        self._Detections = None
-
-        try:
-            from huggingface_hub import hf_hub_download  # type: ignore
-            from supervision import Detections  # type: ignore
-            from ultralytics import YOLO  # type: ignore
-
-            model_path = hf_hub_download(repo_id=model_repo, filename=model_filename)
-            self.model = YOLO(model_path).to(device)
-            self._Detections = Detections
-            logger.info(f"YOLO face detection model loaded from {model_repo}")
-        except ImportError as e:
-            logger.warning(f"YOLO dependencies not available: {e}")
-        except Exception as e:
-            logger.error(f"Failed to load YOLO model: {e}")
-
-    def _select_best_face(self, detections) -> int | None:
-        """Select best face based on confidence and area."""
-        if detections.xyxy.shape[0] == 0:
-            return None
-
-        if detections.confidence is None:
-            return None
-
-        valid_mask = detections.confidence >= self.confidence_threshold
-        if not np.any(valid_mask):
-            return None
-
-        valid_indices = np.where(valid_mask)[0]
-        boxes = detections.xyxy[valid_indices]
-        areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
-        confidences = detections.confidence[valid_indices]
-
-        # Weighted: 70% confidence, 30% area
-        scores = confidences * 0.7 + (areas / np.max(areas)) * 0.3
-        best_idx = valid_indices[np.argmax(scores)]
-        return int(best_idx)
-
-    def _bbox_to_normalized(self, bbox: NDArray, w: int, h: int) -> NDArray:
-        """Convert bbox to [-1, 1] normalized coords.
-
-        Uses center for horizontal, TOP of face (forehead) for vertical.
-        This makes the robot look slightly down at the person.
-        """
-        center_x = (bbox[0] + bbox[2]) / 2.0
-        top_y = bbox[1]  # Use top of face (forehead) instead of center
-        norm_x = (center_x / w) * 2.0 - 1.0
-        norm_y = (top_y / h) * 2.0 - 1.0
-        return np.array([norm_x, norm_y], dtype=np.float32)
-
-    def get_head_position(self, img: NDArray) -> Tuple[NDArray | None, float | None]:
-        """Get head position from face detection.
-
-        Returns: (face_center in [-1,1], roll_angle)
-        """
-        if self.model is None:
-            return None, None
-
-        h, w = img.shape[:2]
-
-        try:
-            results = self.model(img, verbose=False)
-            detections = self._Detections.from_ultralytics(results[0])  # pyright: ignore[reportOptionalMemberAccess]
-
-            face_idx = self._select_best_face(detections)
-            if face_idx is None:
-                return None, None
-
-            bbox = detections.xyxy[face_idx]
-            face_center = self._bbox_to_normalized(bbox, w, h)
-            return face_center, 0.0
-
-        except Exception as e:
-            logger.error(f"Error in head position detection: {e}")
-            return None, None
 
 
 # ============================================================================
@@ -176,8 +80,7 @@ class MotionController:
         self._running = False
         self._thread: Optional[threading.Thread] = None
 
-        # Face tracking (stored as OFFSET from neutral, not absolute pose)
-        self.head_tracker: Optional[HeadTracker] = None
+        # Face offset (stored as OFFSET from neutral, not absolute pose)
         self._face_lock = threading.Lock()
         self._current_face_offset: Optional[NDArray] = None  # 4x4 offset matrix
         self._last_known_face_offset: Optional[NDArray] = None
@@ -254,23 +157,6 @@ class MotionController:
         self._vocal_position: Optional[NDArray] = None  # [x, y, z] meters
 
         logger.info("MotionController initialized")
-
-    def init_head_tracker(self, device: str = "cpu") -> bool:
-        """Initialize YOLO head tracker.
-
-        Returns: True if successful
-        """
-        logger.info(f"Initializing head tracker with device={device}")
-        try:
-            self.head_tracker = HeadTracker(device=device)
-            if self.head_tracker.model is not None:
-                logger.info("Head tracker initialized successfully")
-                return True
-            logger.warning("Head tracker model is None after initialization")
-            return False
-        except Exception as e:
-            logger.error(f"Failed to init head tracker: {e}")
-            return False
 
     # ========================================================================
     # Dance Mode Interface
@@ -423,10 +309,11 @@ class MotionController:
         if self._face_tracking_inhibited:
             return
 
-        if not self.enabled or self.head_tracker is None:
+        if not self.enabled:
             return
 
-        eye_center, _ = self.head_tracker.get_head_position(frame)
+        # Face tracking removed — this method is a no-op
+        return
 
         if eye_center is not None:
             self._last_face_time = time.time()

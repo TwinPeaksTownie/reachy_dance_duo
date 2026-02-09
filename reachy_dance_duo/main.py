@@ -10,7 +10,6 @@ This wraps the dance suite as a ReachyMiniApp for the Reachy Mini dashboard.
 
 import asyncio
 import logging
-import socket
 import threading
 import time
 
@@ -21,20 +20,6 @@ logger = logging.getLogger(__name__)
 from reachy_mini import ReachyMini, ReachyMiniApp
 
 from .app import app, initialize_with_robot, state
-
-
-def _get_app_url(port: int = 9000) -> str:
-    """Build the app URL based on the robot's hostname.
-
-    Wireless Reachy Minis are accessed via mDNS (e.g. reachy-mini.local),
-    so the dashboard tab needs to point there instead of localhost.
-    Try the mDNS hostname first since wireless is the common case.
-    """
-    hostname = socket.gethostname()
-    # Default to mDNS — wireless Reachy is the primary use case
-    if hostname and hostname != "localhost":
-        return f"http://{hostname}.local:{port}"
-    return f"http://localhost:{port}"
 
 
 class ReachyDanceDuo(ReachyMiniApp):
@@ -51,7 +36,7 @@ class ReachyDanceDuo(ReachyMiniApp):
     # App icon emoji (shown in dashboard)
     emoji: str = "🕺"
     # URL for the custom settings page (served by our FastAPI app)
-    custom_app_url: str | None = _get_app_url()
+    custom_app_url: str | None = "http://reachy-mini.local:9000"
     # Prevent daemon from starting its own basic server - we handle it ourselves
     dont_start_webserver: bool = True
 

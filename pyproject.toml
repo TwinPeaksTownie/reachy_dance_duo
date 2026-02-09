@@ -40,7 +40,7 @@ disco_diva = [
 ]
 
 [project.entry-points."reachy_mini_apps"]
-reachy-dance-duo = "reachy_dance_duo.main:ReachyDanceDuo"
+reachy_dance_duo = "reachy_dance_duo.main:ReachyDanceDuo"
 
 [tool.setuptools]
 package-dir = { "" = "." }

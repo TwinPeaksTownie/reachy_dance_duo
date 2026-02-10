@@ -361,68 +361,89 @@ class YouTubeDownloader:
         except Exception:
             pass  # If reconfigure fails, continue with original encoding
 
-        # Ensure common binary paths are in PATH for JS runtime (deno/node) detection
-        extra_paths = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin",
-                       os.path.expanduser("~/.deno/bin"), os.path.expanduser("~/.local/bin")]
+        # Ensure common binary paths are in PATH for JS runtime detection
+        extra_paths = [
+            "/opt/homebrew/bin",
+            "/usr/local/bin",
+            "/usr/bin",
+            "/bin",
+            "/usr/sbin",
+            "/sbin",
+            os.path.expanduser("~/.deno/bin"),
+            os.path.expanduser("~/.local/bin"),
+            os.path.expanduser("~/node_modules/.bin"),
+        ]
         current_path = os.environ.get("PATH", "")
         for p in extra_paths:
             if p not in current_path and os.path.isdir(p):
                 current_path = f"{p}:{current_path}"
         os.environ["PATH"] = current_path
 
-        # Explicitly find deno/node paths for js_runtimes
-        import shutil as _shutil
-        deno_path = _shutil.which("deno")
-        node_path = _shutil.which("node")
+        # Explicitly find JS runtimes
 
-        # Platform-specific fallbacks if shutil.which fails
-        if not deno_path:
-            fallback_paths = []
-            if sys.platform == "darwin":
-                fallback_paths = ["/opt/homebrew/bin/deno"]
-            else:
-                fallback_paths = [
-                    os.path.expanduser("~/.deno/bin/deno"),
-                    "/usr/local/bin/deno",
-                    "/usr/bin/deno",
-                ]
-            for fp in fallback_paths:
-                if os.path.exists(fp):
-                    deno_path = fp
-                    break
+        runtimes_to_check = ["deno", "node", "bun", "qjs"]
+        js_runtimes = {}
 
-        if not node_path:
-            fallback_paths = ["/usr/bin/node", "/usr/local/bin/node"]
-            for fp in fallback_paths:
-                if os.path.exists(fp):
-                    node_path = fp
-                    break
+        for rt in runtimes_to_check:
+            path = shutil.which(rt)
+            if not path:
+                # Platform-specific fallbacks
+                fallbacks = []
+                if rt == "deno":
+                    if sys.platform == "darwin":
+                        fallbacks = ["/opt/homebrew/bin/deno", "/usr/local/bin/deno"]
+                    else:
+                        fallbacks = [
+                            os.path.expanduser("~/.deno/bin/deno"),
+                            "/usr/local/bin/deno",
+                            "/usr/bin/deno",
+                        ]
+                elif rt == "node":
+                    fallbacks = [
+                        "/usr/bin/node",
+                        "/usr/local/bin/node",
+                        "/opt/homebrew/bin/node",
+                    ]
+
+                for fb in fallbacks:
+                    if os.path.exists(fb):
+                        path = fb
+                        break
+
+            if path:
+                js_runtimes[rt] = {"executable": path}
 
         # If no JS runtime found at all, try to install deno
-        if not deno_path and not node_path:
-            logger.warning("[YouTubeDownloader] No JS runtime (deno/node) found. Attempting to install deno...")
+        if not js_runtimes:
+            logger.warning(
+                "[YouTubeDownloader] No JS runtime (deno/node) found. Attempting to install deno..."
+            )
             try:
                 subprocess.run(
                     ["sh", "-c", "curl -fsSL https://deno.land/install.sh | sh"],
-                    capture_output=True, timeout=60,
+                    capture_output=True,
+                    timeout=60,
                 )
                 deno_candidate = os.path.expanduser("~/.deno/bin/deno")
                 if os.path.exists(deno_candidate):
-                    deno_path = deno_candidate
-                    logger.info(f"[YouTubeDownloader] Installed deno at {deno_path}")
+                    js_runtimes["deno"] = {"executable": deno_candidate}
+                    logger.info(
+                        f"[YouTubeDownloader] Installed deno at {deno_candidate}"
+                    )
                 else:
-                    logger.error("[YouTubeDownloader] deno install completed but binary not found")
+                    logger.error(
+                        "[YouTubeDownloader] deno install completed but binary not found"
+                    )
             except Exception as e:
                 logger.error(f"[YouTubeDownloader] Failed to install deno: {e}")
 
-        js_runtimes = {}
-        if deno_path:
-            js_runtimes["deno"] = {"executable": deno_path}
-        if node_path:
-            js_runtimes["node"] = {"executable": node_path}
-
         if not js_runtimes:
-            logger.error("[YouTubeDownloader] No JS runtime available. YouTube downloads may fail with 403.")
+            logger.error(
+                "[YouTubeDownloader] No JS runtime available. YouTube downloads may fail with 403."
+            )
+        else:
+            found_runtimes = ", ".join(js_runtimes.keys())
+            logger.info(f"[YouTubeDownloader] Found JS runtimes: {found_runtimes}")
 
         try:
             import yt_dlp  # type: ignore
@@ -468,20 +489,27 @@ class YouTubeDownloader:
             "format": "bestaudio/best",
             "outtmpl": output_template,
             "extract_flat": False,
-            "noplaylist": True,  # Prevent downloading entire playlists
-            "max_downloads": 5,  # Allow for info extraction + multiple format attempts
-            "quiet": False,  # Enable output so our logger handles it
+            "noplaylist": True,
+            "max_downloads": 5,
+            "quiet": False,
             "no_warnings": False,
             "noprogress": True,
             "logger": UTF8Logger(),
             # Fix for 403 Forbidden and JS runtime issues
             "js_runtimes": js_runtimes,
-            "remote_components": ["ejs:github"],  # Solve JS challenges (must be a list)
+            "remote_components": ["ejs:github"],
             "allow_unplayable_formats": False,
-            # Fix encoding issues with Unicode characters in titles
-            "restrictfilenames": True,  # Replace special chars with underscores
-            "windowsfilenames": True,  # Additional filename sanitization
-            # Legacy compat options for better encoding handling
+            # Fix for Sabr/403: Use android/ios clients as they are often more stable
+            "extractor_args": {
+                "youtube": {
+                    "player_client": ["android", "web"],
+                    "skip": ["dash", "hls"],  # Avoid fragmented streams if possible
+                }
+            },
+            # Common headers to avoid bot detection
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+            "restrictfilenames": True,
+            "windowsfilenames": True,
             "compat_opts": ["no-live-chat"],
             "postprocessors": [
                 {
@@ -490,7 +518,9 @@ class YouTubeDownloader:
                     "preferredquality": "192",
                 }
             ],
-            "postprocessor_args": {},
+            # Slight delay to avoid aggressive rate limiting
+            "sleep_interval": 1,
+            "max_sleep_interval": 3,
         }
 
         try:
@@ -514,10 +544,8 @@ class YouTubeDownloader:
 
                 video_title = str(info.get("title", "Unknown"))
                 video_id = str(info.get("id", "Unknown"))
-                # Use the canonical webpage URL for the actual download to avoid playlist params
                 download_target = info.get("webpage_url", url)
 
-                # Safely encode title for logging
                 safe_title = video_title.encode("utf-8", errors="replace").decode(
                     "utf-8"
                 )
@@ -526,37 +554,33 @@ class YouTubeDownloader:
 
                 ydl.download([download_target])
 
-                # yt-dlp might download various formats without conversion
-                # We use the actual filename from yt-dlp info and check if it exists
-                # Or find the file that exactly matches the video ID in its name
-                video_id = str(info.get("id", "Unknown"))
-                
                 # Look for the file literally. We search all files and find one that contains [ID]
-                # but we do it as a string check, not a glob check to avoid [] being treated as a set
                 audio_files = []
                 for f in self.download_dir.glob("*"):
                     if f"[{video_id}]" in f.name:
                         audio_files.append(f)
-                
+
                 # Filter by valid audio extensions
                 audio_files = [
                     f
                     for f in audio_files
-                    if f.suffix.lower() in [".wav", ".mp3", ".webm", ".m4a", ".flac", ".opus"]
+                    if f.suffix.lower()
+                    in [".wav", ".mp3", ".webm", ".m4a", ".flac", ".opus"]
                 ]
 
                 if audio_files:
                     # Sort by modification time to get the freshest one
                     audio_files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
                     return str(audio_files[0])
-                
-                logger.error(f"[YouTubeDownloader] Could not find downloaded file for ID: {video_id}")
+
+                logger.error(
+                    f"[YouTubeDownloader] Could not find downloaded file for ID: {video_id}"
+                )
 
         except UnicodeEncodeError as e:
             logger.error(f"[ConnectedChoreographer] Encoding error: {e}")
             self.log("Download failed: encoding error in video metadata")
         except Exception as e:
-            # Safely format error message
             try:
                 error_msg = str(e)
             except UnicodeEncodeError:
@@ -797,7 +821,7 @@ class ConnectedChoreographer(DanceMode):
         self.audio_thread: Optional[threading.Thread] = None
         self.audio_process: Optional[subprocess.Popen[Any]] = None
         self.prep_task: Optional[asyncio.Task[None]] = None
-        
+
         # Audio Playback Data (16k Stereo)
         self.audio_playback_data: Optional[np.ndarray[Any, np.dtype[np.float32]]] = None
 
@@ -950,43 +974,43 @@ class ConnectedChoreographer(DanceMode):
         """Stream 16kHz Stereo audio data to the robot in chunks."""
         if self.audio_playback_data is None:
             return
-            
+
         logger.info(f"[{self.MODE_NAME}] Starting audio stream thread (16kHz Stereo)")
-        
+
         sr = 16000
         chunk_time = 0.1  # 100ms
-        
+
         # Now using 2D array (frames, channels)
         # 16000 frames/sec * 0.1s = 1600 frames per chunk
         chunk_size_frames = int(sr * chunk_time)
         total_frames = self.audio_playback_data.shape[0]
-        
+
         idx = 0
-        
+
         try:
             self.mini.media.start_playing()
         except Exception as e:
             logger.error(f"[{self.MODE_NAME}] Failed to start media player: {e}")
             return
-            
+
         while not self.stop_event.is_set() and idx < total_frames:
             iter_start = time.time()
-            
+
             end = min(idx + chunk_size_frames, total_frames)
             chunk = self.audio_playback_data[idx:end]
-            
+
             try:
                 self.mini.media.push_audio_sample(chunk)
             except Exception as e:
                 logger.error(f"[{self.MODE_NAME}] Push audio error: {e}")
                 break
-                
+
             idx = end
-            
+
             elapsed = time.time() - iter_start
             sleep_time = max(0.001, chunk_time - elapsed)
             time.sleep(sleep_time)
-            
+
         logger.info(f"[{self.MODE_NAME}] Audio stream finished")
 
     def _start_audio_playback(self) -> None:
@@ -994,7 +1018,9 @@ class ConnectedChoreographer(DanceMode):
         if self.audio_playback_data is None:
             return
 
-        self.audio_thread = threading.Thread(target=self._audio_streaming_loop, daemon=True)
+        self.audio_thread = threading.Thread(
+            target=self._audio_streaming_loop, daemon=True
+        )
         self.audio_thread.start()
 
     async def _prepare_and_start(self, download_url: str) -> None:
@@ -1023,36 +1049,41 @@ class ConnectedChoreographer(DanceMode):
 
             # 2. Load Audio for Playback (16kHz Stereo)
             self._log("Loading audio...")
-            
+
             # Load at 16kHz Stereo to match reachymini_audio_sink
             self.audio_playback_data, _ = await loop.run_in_executor(
-                    None, lambda: load_audio_av(audio_path, target_sr=16000, layout="stereo")
+                None,
+                lambda: load_audio_av(audio_path, target_sr=16000, layout="stereo"),
             )
-            
+
             if len(self.audio_playback_data) == 0:
-                 logger.error(f"[{self.MODE_NAME}] Audio load failed")
-                 self._status["state"] = "error"
-                 self.running = False
-                 return
-            
+                logger.error(f"[{self.MODE_NAME}] Audio load failed")
+                self._status["state"] = "error"
+                self.running = False
+                return
+
             # Reshape to (N, 2) for clarity and SoundDevice compatibility
             self.audio_playback_data = self.audio_playback_data.reshape(-1, 2)
             n_frames = self.audio_playback_data.shape[0]
             duration = n_frames / 16000
-            
-            logger.info(f"[{self.MODE_NAME}] Loaded audio: {n_frames} frames, {duration:.2f}s duration at 16000Hz Stereo")
+
+            logger.info(
+                f"[{self.MODE_NAME}] Loaded audio: {n_frames} frames, {duration:.2f}s duration at 16000Hz Stereo"
+            )
             self._log(f"Audio received: {duration:.1f}s")
-            
+
             # Normalize for maximum volume
             max_val = np.max(np.abs(self.audio_playback_data))
             if max_val > 0.001:
                 self.audio_playback_data = self.audio_playback_data / max_val
-                logger.info(f"[{self.MODE_NAME}] Normalized audio (scale factor: {1.0/max_val:.2f})")
+                logger.info(
+                    f"[{self.MODE_NAME}] Normalized audio (scale factor: {1.0 / max_val:.2f})"
+                )
 
             # 3. Analyze
             self._status["state"] = "analyzing"
             self._log("Analyzing Beats...")
-            
+
             analyzer = SongAnalyzer(log_callback=self._log)
             self.analysis = await loop.run_in_executor(
                 None, analyzer.analyze, audio_path
@@ -1091,7 +1122,7 @@ class ConnectedChoreographer(DanceMode):
             logger.info(
                 f"[{self.MODE_NAME}] Started - dancing to {self.analysis.tempo:.1f} BPM"
             )
-            
+
             # Cleanup source file now that we have data in memory
             try:
                 os.remove(audio_path)
@@ -1105,6 +1136,7 @@ class ConnectedChoreographer(DanceMode):
             self.running = False
             self._status["running"] = False
             import traceback
+
             traceback.print_exc()
 
     async def stop(self) -> None:
@@ -1137,11 +1169,11 @@ class ConnectedChoreographer(DanceMode):
         if self.dance_thread and self.dance_thread.is_alive():
             self.dance_thread.join(timeout=2.0)
         self.dance_thread = None
-        
+
         if self.audio_thread and self.audio_thread.is_alive():
             self.audio_thread.join(timeout=2.0)
         self.audio_thread = None
-        
+
         if self.audio_thread and self.audio_thread.is_alive():
             self.audio_thread.join(timeout=2.0)
         self.audio_thread = None
@@ -1296,15 +1328,6 @@ class ConnectedChoreographer(DanceMode):
         self._start_audio_playback()
         self._dance_loop_local_audio(beat_times, sequence_assignments)
 
-    def _start_audio_playback(self) -> None:
-        """Start manual audio streaming thread."""
-        if self.audio_playback_data is None:
-            return
-
-        self.audio_thread = threading.Thread(target=self._audio_streaming_loop, daemon=True)
-        self.audio_thread.start()
-
-
     def _dance_loop_local_audio(
         self,
         beat_times: np.ndarray[Any, np.dtype[np.float64]],
@@ -1397,11 +1420,3 @@ class ConnectedChoreographer(DanceMode):
                 self.mixer.send_intent(final_intent)
 
             time.sleep(0.02)
-
-    def _start_audio_playback(self) -> None:
-        """Play audio using manual streaming."""
-        if self.audio_playback_data is None:
-            return
-
-        self.audio_thread = threading.Thread(target=self._audio_streaming_loop, daemon=True)
-        self.audio_thread.start()

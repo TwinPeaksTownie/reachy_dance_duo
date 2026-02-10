@@ -2,7 +2,8 @@
 
 Uses YouTube Music to search for tracks, downloads via yt-dlp, performs
 offline Librosa analysis, and generates choreographed dance sequences
-based on song energy.
+based on song energy. All decoding is handled via PyAV to avoid
+external FFmpeg dependencies.
 
 This is the "Performer" - knows the song in advance, can anticipate
 changes, and delivers rehearsed movements.
@@ -349,7 +350,7 @@ class YouTubeDownloader:
             url: Full YouTube URL or search query prefixed with "ytsearch1:".
 
         Returns:
-            Path to downloaded WAV file or None if failed.
+            Path to downloaded audio file or None if failed.
 
         """
         # Reconfigure stdout/stderr to use UTF-8 with error replacement
@@ -511,14 +512,7 @@ class YouTubeDownloader:
             "restrictfilenames": True,
             "windowsfilenames": True,
             "compat_opts": ["no-live-chat"],
-            "postprocessors": [
-                {
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": "wav",
-                    "preferredquality": "192",
-                }
-            ],
-            # Slight delay to avoid aggressive rate limiting
+            # No postprocessor needed - PyAV decodes raw formats (m4a/webm) directly
             "sleep_interval": 1,
             "max_sleep_interval": 3,
         }
@@ -565,7 +559,7 @@ class YouTubeDownloader:
                     f
                     for f in audio_files
                     if f.suffix.lower()
-                    in [".wav", ".mp3", ".webm", ".m4a", ".flac", ".opus"]
+                    in [".wav", ".mp3", ".webm", ".m4a", ".flac", ".opus", ".mp4"]
                 ]
 
                 if audio_files:

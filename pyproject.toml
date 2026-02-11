@@ -13,10 +13,7 @@ dependencies = [
     "reachy-mini",
     "av>=11.0.0",
     "numpy>=1.24.0",
-    "scipy",
-
-    "hydra-core",
-    "omegaconf",
+    "reachy-mini-dances-library",
     "fastapi>=0.109.0",
     "uvicorn[standard]>=0.27.0",
     "pydantic>=2.0",
@@ -26,10 +23,6 @@ dependencies = [
     "yt-dlp>=2024.1.0",
     "ytmusicapi>=1.11.0",
     "eclipse-zenoh>=1.0.0",
-    "reachy-mini-dances-library",
-    "huggingface_hub>=0.20.0",
-
-    "PyYAML>=6.0",  # Used by vendored audyn models for config loading
 ]
 keywords = ["reachy-mini-app", "dance"]
 

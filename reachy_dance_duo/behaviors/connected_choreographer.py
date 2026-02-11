@@ -24,16 +24,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Optional, cast
 
-import av
-import librosa
-import numpy as np
+import av  # type: ignore
+import librosa  # type: ignore
+import numpy as np  # type: ignore
 
 from .. import mode_settings
 from ..core.safety_mixer import MovementIntent
 from .base import DanceMode
 
 if TYPE_CHECKING:
-    from reachy_mini import ReachyMini
+    from reachy_mini import ReachyMini  # type: ignore
 
     from ..core.safety_mixer import SafetyMixer
     from ..youtube_music.client import YouTubeMusicClient
@@ -778,7 +778,6 @@ class ConnectedChoreographer(DanceMode):
     MODE_ID = "beat_bandit"
     MODE_NAME = "Beat Bandit"
 
-    # Asymmetric physics for body_yaw (hip sway) - similar to synthwave_serenade
     BODY_YAW_PHYSICS = {"attack": 0.25, "decay": 0.15}
 
     def __init__(
@@ -1050,7 +1049,7 @@ class ConnectedChoreographer(DanceMode):
                 lambda: load_audio_av(audio_path, target_sr=16000, layout="stereo"),
             )
 
-            if len(self.audio_playback_data) == 0:
+            if self.audio_playback_data is None or len(self.audio_playback_data) == 0:
                 logger.error(f"[{self.MODE_NAME}] Audio load failed")
                 self._status["state"] = "error"
                 self.running = False

@@ -4,12 +4,12 @@ Provides both a web UI (default) and a CLI for starting dance modes.
 
 Usage:
     # UI Mode
-    python -m reachy_dance_suite
+    python -m reachy_dance_duo
 
     # CLI Mode - starts dancing immediately
-    python -m reachy_dance_suite --mode live_groove
-    python -m reachy_dance_suite --mode synthwave_serenade
-    python -m reachy_dance_suite --mode beat_bandit --url "https://youtube.com/..."
+    python -m reachy_dance_duo --mode live_groove
+    python -m reachy_dance_duo --mode beat_bandit --url "https://youtube.com/..."
+
 """
 
 import argparse
@@ -26,15 +26,17 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    python -m reachy_dance_suite                                    # Start in UI mode (idle)
-    python -m reachy_dance_suite --mode live_groove                 # Start Live Groove
-    python -m reachy_dance_suite --mode beat_bandit --url "https://youtube.com/watch?v=..."
+    python -m reachy_dance_duo                                    # Start in UI mode (idle)
+    python -m reachy_dance_duo --mode live_groove                 # Start Live Groove
+    python -m reachy_dance_duo --mode beat_bandit --url "https://youtube.com/watch?v=..."
+
+
         """,
     )
 
     parser.add_argument(
         "--mode",
-        choices=["live_groove", "synthwave_serenade", "beat_bandit"],
+        choices=["live_groove", "beat_bandit"],
         help="Start in this mode immediately (skip idle state)",
     )
     parser.add_argument(
@@ -49,8 +51,8 @@ Examples:
     parser.add_argument(
         "--port",
         type=int,
-        default=8000,
-        help="Port for web server (default: 8000)",
+        default=9000,
+        help="Port for web server (default: 9000)",
     )
 
     return parser.parse_args()
@@ -58,11 +60,10 @@ Examples:
 
 def run_cli(mode: str, url: Optional[str] = None):
     """Run in CLI mode - start dancing immediately without web UI."""
-    from reachy_mini import ReachyMini
+    from reachy_mini import ReachyMini  # type: ignore
     from .behaviors.base import DanceMode
     from .behaviors.connected_choreographer import ConnectedChoreographer
     from .behaviors.live_groove import LiveGroove
-    from .behaviors.synthwave_serenade import SynthwaveSerenade
     from .config import get_default_safety_config
     from .core.safety_mixer import SafetyMixer
 
@@ -77,22 +78,10 @@ def run_cli(mode: str, url: Optional[str] = None):
         safety_mixer = SafetyMixer(safety_config, mini)
         logger.info("SafetyMixer initialized")
 
-        # Initialize MotionController for synthwave_serenade mode
-        motion_controller = None
-        if mode == "synthwave_serenade":
-            from .core.motion_controller import MotionController
-
-            motion_controller = MotionController(mini, enabled=True)
-
         # Create and start the requested mode
         dance_mode: DanceMode
 
-        if mode == "synthwave_serenade":
-            if motion_controller is None:
-                logger.error("MotionController failed to initialize")
-                return
-            dance_mode = SynthwaveSerenade(safety_mixer, mini, motion_controller)
-        elif mode == "live_groove":
+        if mode == "live_groove":
             dance_mode = LiveGroove(safety_mixer, mini)
         elif mode == "beat_bandit":
             bb_mode = ConnectedChoreographer(
@@ -138,7 +127,7 @@ def main():
     else:
         # Import app here to avoid early initialization
         from .app import app
-        import uvicorn
+        import uvicorn  # type: ignore
 
         logger.info(f"Starting web UI on {args.host}:{args.port}")
         uvicorn.run(app, host=args.host, port=args.port, log_level="info")

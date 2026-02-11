@@ -1,8 +1,8 @@
 ---
 title: reachy-dance-duo
 emoji: 🕺
-colorFrom: indigo
-colorTo: red
+colorFrom: green
+colorTo: blue
 sdk: static
 pinned: false
 short_description: Turn any song into a Reachy Dance Party

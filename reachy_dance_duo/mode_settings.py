@@ -26,13 +26,6 @@ _DEFAULTS = {
         "antenna_amplitude": 1.75,
         "antenna_gain": 8.0,
     },
-    "synthwave_serenade": {
-        "intensity": 1.0,
-        "liveliness": 0.9,
-        "strain_threshold": 15.0,
-        "vocal_response": 1.0,  # 0.01-1.0, always enabled
-        "playback_volume": 1.5,  # Audio playback gain multiplier
-    },
 }
 
 

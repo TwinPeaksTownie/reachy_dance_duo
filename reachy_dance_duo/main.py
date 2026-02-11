@@ -3,7 +3,6 @@
 A comprehensive dance application for Reachy Mini with three modes:
 - Live Groove: Real-time BPM-driven dancing from audio input
 - Beat Bandit: YouTube integration with beat analysis
-- Synthwave Serenade: Streaming audio control with face tracking
 
 This wraps the dance suite as a ReachyMiniApp for the Reachy Mini dashboard.
 """
@@ -28,7 +27,6 @@ class ReachyDanceDuo(ReachyMiniApp):
     Features:
     - Live Groove: Dance to any music playing nearby using microphone input
     - Beat Bandit: Play YouTube videos with synchronized dancing
-    - Synthwave Serenade: Stream audio for reactive movement and face tracking
 
     The app provides a web UI for configuration and control.
     """

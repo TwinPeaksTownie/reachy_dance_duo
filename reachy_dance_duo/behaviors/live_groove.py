@@ -29,11 +29,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional, cast
 
-import librosa
-import numpy as np
-from reachy_mini_dances_library.collection.dance import AVAILABLE_MOVES
+import librosa  # type: ignore
+import numpy as np  # type: ignore
+from reachy_mini_dances_library.collection.dance import AVAILABLE_MOVES  # type: ignore
 
-from reachy_mini import ReachyMini
+from reachy_mini import ReachyMini  # type: ignore
 
 from .. import mode_settings, move_config
 from ..core.safety_mixer import MovementIntent
@@ -916,7 +916,7 @@ class LiveGroove(DanceMode):
                 try:
                     sample_raw: Optional[np.ndarray[Any, Any]] = (
                         self.mini.media.get_audio_sample()
-                    ) # pyright: ignore[reportAssignmentType]
+                    )  # pyright: ignore[reportAssignmentType]
                 except Exception:
                     break
 

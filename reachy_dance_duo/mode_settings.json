@@ -4,13 +4,6 @@
     "volume_gate_threshold": 0.008,
     "bpm_stability_threshold": 5.5
   },
-  "synthwave_serenade": {
-    "intensity": 1.2,
-    "liveliness": 2.4,
-    "strain_threshold": 20.0,
-    "vocal_response": 1.1,
-    "playback_volume": 1.7
-  },
   "beat_bandit": {
     "amplitude_scale": 0.5,
     "interpolation_alpha": 0.25,

@@ -13,9 +13,33 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+import av
 import librosa
 import librosa.display
 import numpy as np
+
+
+def load_audio_av(file_path: str, target_sr: int = 22050) -> tuple[np.ndarray, int]:
+    """Load audio file using PyAV to avoid libsndfile/soundfile dependency."""
+    try:
+        container = av.open(file_path)
+        stream = container.streams.audio[0]
+        resampler = av.AudioResampler(format="flt", layout="mono", rate=target_sr)
+
+        all_samples = []
+        for frame in container.decode(stream):
+            frame.pts = None
+            for resampled_frame in resampler.resample(frame):
+                all_samples.append(resampled_frame.to_ndarray()[0])
+
+        if not all_samples:
+            return np.array([], dtype=np.float32), target_sr
+
+        return np.concatenate(all_samples).astype(np.float32), target_sr
+    except Exception as e:
+        raise RuntimeError(f"Failed to load audio {file_path} with PyAV: {e}")
+
+
 from numpy.typing import NDArray
 
 logger = logging.getLogger(__name__)
@@ -50,9 +74,11 @@ class SpeechAnalyzer:
             )
         logger.info("")
 
-        # Load audio
-        audio, sr = librosa.load(audio_path, sr=self.sample_rate, mono=True)
-        duration = librosa.get_duration(y=audio, sr=sr)
+        # Load audio using PyAV to avoid libsndfile dependency
+        audio, sr = load_audio_av(audio_path, target_sr=self.sample_rate)
+
+        # Calculate duration from samples and rate since we don't have librosa.load's auto duration
+        duration = len(audio) / sr
 
         # Extract audio features
         audio_features = self._extract_audio_features(audio, duration)

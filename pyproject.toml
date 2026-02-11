@@ -23,7 +23,6 @@ dependencies = [
     "httpx>=0.26.0",
     "numba>=0.58.0",
     "librosa>=0.10.0,<0.11.0",
-    "soundfile>=0.12.0",
     "yt-dlp>=2024.1.0",
     "ytmusicapi>=1.11.0",
     "eclipse-zenoh>=1.0.0",
@@ -35,9 +34,8 @@ dependencies = [
 keywords = ["reachy-mini-app", "dance"]
 
 [project.optional-dependencies]
-disco_diva = [
-    "pyaudio>=0.2.14",  # Requires system PortAudio library (brew install portaudio on macOS)
-]
+# disco_diva removed to avoid portaudio dependency
+
 
 [project.entry-points."reachy_mini_apps"]
 reachy_dance_duo = "reachy_dance_duo.main:ReachyDanceDuo"

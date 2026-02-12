@@ -550,34 +550,46 @@
 	</section>
 
 	<section class="section">
-		<h2 class="section-title">How it Works</h2>
+		<h2 class="section-title" style="text-align:center; font-size:2.5rem; font-weight:800; margin-bottom:1rem; background:linear-gradient(90deg,#fff,var(--primary));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Two Ways to Dance</h2>
+		<p style="text-align:center; color:var(--text-dim); max-width:650px; margin:0 auto 3rem; font-size:1.05rem; line-height:1.7;">
+			Reachy Dance Duo gives Reachy Mini two distinct dance modes&mdash;each with its own approach to turning music into movement. No cloud inference, no API keys&mdash;everything runs locally on the robot.
+		</p>
+
 		<div class="grid">
-			<div class="card">
-				<div class="step-num">1</div>
-				<h3>Start the App</h3>
-				<p>Launch Reachy Dance Duo from the dashboard. No API keys, no cloud inference, no heavy
-					processing&mdash;everything runs locally on the robot.</p>
+			<div class="card" style="border-left:3px solid #3dde99; position:relative;">
+				<span style="display:inline-block; background:#3dde99; color:#000; font-weight:700; font-size:0.75rem; padding:3px 10px; border-radius:12px; text-transform:uppercase; letter-spacing:1px; margin-bottom:1rem;">Live</span>
+				<h3 style="font-size:1.6rem; font-weight:700; margin-bottom:0.75rem; color:#3dde99;">Live Groove</h3>
+				<p style="color:var(--text-dim); line-height:1.7;">
+					Reachy listens to music playing in the room through the microphone, detects the beat in real-time, and dances along using a library of pre-recorded moves. Designed to be social and responsive to whatever music is playing nearby.
+				</p>
+				<div style="margin-top:1.25rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.06);">
+					<p style="color:#666; font-size:0.85rem; line-height:1.6;">
+						<strong style="color:#888;">How it works:</strong> Calibrates to filter out motor noise, then continuously measures tempo and beats as music plays&mdash;matching moves to the rhythm in real-time.
+					</p>
+				</div>
 			</div>
-			<div class="card">
-				<div class="step-num">2</div>
-				<h3>Pick a Mode</h3>
-				<p>Choose <strong>Live Groove</strong> for real-time analysis of ambient music with targeted beat
-					detection, or <strong>Beat Bandit</strong> where Reachy sails the high seas of YouTube to
-					procure your content.</p>
+
+			<div class="card" style="border-left:3px solid #ff6170; position:relative;">
+				<span style="display:inline-block; background:#ff6170; color:#000; font-weight:700; font-size:0.75rem; padding:3px 10px; border-radius:12px; text-transform:uppercase; letter-spacing:1px; margin-bottom:1rem;">On-Demand</span>
+				<h3 style="font-size:1.6rem; font-weight:700; margin-bottom:0.75rem; color:#ff6170;">Beat Bandit</h3>
+				<p style="color:var(--text-dim); line-height:1.7;">
+					Pick a song from YouTube and Reachy analyzes the entire track first to create a complete choreography, then performs the dance in perfect sync with the music from start to finish.
+				</p>
+				<div style="margin-top:1.25rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.06);">
+					<p style="color:#666; font-size:0.85rem; line-height:1.6;">
+						<strong style="color:#888;">How it works:</strong> Downloads and analyzes the full audio, maps beats and energy across the entire song, then choreographs a complete dance sequence before playback begins.
+					</p>
+				</div>
 			</div>
-			<div class="card">
-				<div class="step-num">3</div>
-				<h3>Play Your Music</h3>
-				<p>In <strong>Live Groove</strong>, tempo and beats are measured live as music plays. In
-					<strong>Beat Bandit</strong>, the entire song is analyzed and a full dance sequence is
-					choreographed before playback begins.</p>
-			</div>
-			<div class="card">
-				<div class="step-num">4</div>
-				<h3>Dance!</h3>
-				<p>Sit back and watch Reachy Mini move. The choreography plays in sync with the audio for smooth,
-					expressive movements.</p>
-			</div>
+		</div>
+
+		<div style="max-width:800px; margin:3rem auto 0; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:1.75rem 2rem; text-align:center;">
+			<p style="color:var(--text-dim); font-size:0.95rem; line-height:1.7; margin-bottom:0.5rem;">
+				The dancing robots above are playing a recorded performance synchronized to the audio using <strong style="color:#3dde99;">Live Groove</strong> mode&mdash;the same technology that lets Reachy dance to music in real-time.
+			</p>
+			<p style="color:#555; font-size:0.8rem; line-height:1.6;">
+				3D visualizer built with Three.js. Reachy Mini models shamelessly borrowed from <strong style="color:#888;"><a href="https://8bitkick.github.io/reachy-mini/" style="color:var(--accent-blue); text-decoration:none;">8bitkick</a></strong>, who made much better 3D models than I did.
+			</p>
 		</div>
 	</section>
 

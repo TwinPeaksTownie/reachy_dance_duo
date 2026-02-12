@@ -2,7 +2,7 @@
 title: reachy-dance-duo
 emoji: 🕺
 colorFrom: green
-colorTo: blue
+colorTo: green
 sdk: static
 pinned: false
 short_description: Turn any song into a Reachy Dance Party
